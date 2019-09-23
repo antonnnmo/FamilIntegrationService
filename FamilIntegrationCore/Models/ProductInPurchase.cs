@@ -13,6 +13,6 @@ namespace FamilIntegrationCore.Models
 		[JsonProperty]
 		public string ProductCode { get; set; }
 		[JsonProperty]
-		public string ProductCode { get; set; }
+		public string PurchaseId { get; set; }
 	}
 }

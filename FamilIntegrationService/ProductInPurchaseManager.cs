@@ -49,18 +49,12 @@ namespace FamilIntegrationService
 						{
 							pack.Add(new ProductInPurchase()
 							{
-								Number = reader.GetValue("Number", String.Empty),
+								Price = reader.GetValue("Price", 0m),
 								ERPId = reader.GetValue("ERPId", String.Empty),
-								CardNumber = reader.GetValue("CardNumber", String.Empty),
+								ProductCode = reader.GetValue("ProductCode", String.Empty),
 								Amount = reader.GetValue("Amount", 0m),
-								CashDeskCode = reader.GetValue("CashDeskCode", String.Empty),
-								ContactId = reader.GetValue("ContactId", String.Empty),
-								CreatedOn = reader.GetValue("CreatedOn", String.Empty),
-								PaymentForm = reader.GetValue("PaymentForm", String.Empty),
-								Phone = reader.GetValue("Phone", String.Empty),
-								PurchaseDate = reader.GetValue("purchaseDateStr", String.Empty),
-								PDate = reader.GetValue("purchaseDate", DateTime.MinValue),
-								ShopCode = reader.GetValue("ShopCode", String.Empty),
+								PurchaseId = reader.GetValue("PurchaseId", String.Empty),
+								Quantity = reader.GetValue("Quantity", 0),
 								Id = Guid.NewGuid(),
 							});
 						}
