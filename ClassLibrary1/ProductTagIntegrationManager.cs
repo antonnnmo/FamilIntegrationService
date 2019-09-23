@@ -8,28 +8,23 @@ using Newtonsoft.Json;
 
 namespace Terrasoft.Configuration
 {
-	public class PurchaseIntegrationManager
+	public class ProductInPurchaseIntegrationManager
 	{
 		private static readonly string ERPDataSourceId = "27F9DE70-4B0F-423C-AC62-C4730414F3B3";
 		private LookupManager _lookupManager;
-		private string _tableName = "SmrPurchase";
+		private string _tableName = "SmrProductInPurchase";
 
 		public UserConnection UserConnection { get; private set; }
 
-		public PurchaseIntegrationManager(UserConnection uc)
+		public ProductInPurchaseIntegrationManager(UserConnection uc)
 		{
 			UserConnection = uc;
 			_lookupManager = new LookupManager(uc);
 		}
 
-		private Guid GetContactId(string contactId)
-		{
-			return (new Select(UserConnection).Column("Id").From("Contact").Where("SmrERPId").IsEqual(Column.Parameter(contactId)) as Select).ExecuteScalar<Guid>();
-		}
-
 		public PackResult PrimaryIntegratePack(string request)
 		{
-			var objs = JsonConvert.DeserializeObject<List<PurchaseGateInfo>>(request);
+			var objs = JsonConvert.DeserializeObject<List<ProductInPurchaseGateInfo>>(request);
 			var lookupManager = new LookupManager(UserConnection);
 			var result = new List<PackResult>();
 			var sb = new StringBuilder();
@@ -37,11 +32,7 @@ namespace Terrasoft.Configuration
 			var values = new List<string>();
 			foreach (var info in objs)
 			{
-				var shopId = lookupManager.FindLookupIdByCode(info.ShopCode, "SmrShop");
-				var cashDeskId = lookupManager.FindLookupIdByCode(info.CashDeskCode, "SmrCashdesk");
-				var paymentFormId = lookupManager.FindLookupIdByName(info.PaymentForm, "SmrPaymentForm");
-
-				values.Add(GetInsertValues(info, shopId, cashDeskId, paymentFormId));
+				values.Add(GetInsertValues(info));
 			}
 
 			sb.AppendLine(string.Join(",", values));
@@ -59,15 +50,12 @@ namespace Terrasoft.Configuration
 
 		private string GetInsertHead()
 		{
-			return "Insert into SmrPurchase(Number, SmrERPId, Id, ContactId, SmrLastIntegrationDate, ShopId, CashdeskId, PaymentFormId, Total, SmrSourceId, Date) VALUES";
+			return "Insert into SmrProductInPurchase(SmrPurchaseId, ProductId, Price, Quantity, Amount) VALUES";
 		}
 
-		public string GetInsertValues(PurchaseGateInfo info, Guid? shopId, Guid? cashDeskId, Guid? paymentFormId)
+		public string GetInsertValues(ProductInPurchaseGateInfo info)
 		{
-			var shop = shopId == Guid.Empty ? "null" : String.Format("'{0}'", shopId);
-			var cashDesk = cashDeskId == Guid.Empty ? "null" : String.Format("'{0}'", cashDeskId);
-			var paymentForm = paymentFormId == Guid.Empty ? "null" : String.Format("'{0}'", paymentFormId);
-			return $"('{info.Number}', '{info.ERPId}', '{info.Id}', (Select Id from Contact WITH(NOLOCK) Where SmrERPId = '{info.ContactId}'), GETUTCDATE(), {shop}, {cashDesk}, {paymentForm}, {info.Amount.ToString().Replace(",", ".")}, '{ERPDataSourceId}', CONVERT(datetime, '{info.PurchaseDate}', 21))";
+			return $"((Select Id from Purchase WITH(NOLOCK) Where SmrERPId = '{info.PurchaseId}'), (Select Id from Product WITH(NOLOCK) Where Code = '{info.ProductCode}'), {info.Price.ToString().Replace(",", ".")}, {info.Quantity}, {info.Amount.ToString().Replace(",", ".")})";
 		}
 	}
 }

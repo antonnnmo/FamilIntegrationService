@@ -185,5 +185,13 @@ namespace FamilIntegrationService.Controllers
 
 			return Ok();
 		}
+
+		[HttpGet("PrimaryProductInPurchase")]
+		public ActionResult StartPrimaryProductInPurchase()
+		{
+			new Task(() => { new ProductInPurchaseManager().ExecutePrimary(); }).Start();
+
+			return Ok();
+		}
 	}
 }
