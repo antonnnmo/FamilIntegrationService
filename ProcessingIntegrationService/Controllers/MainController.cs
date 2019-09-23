@@ -182,7 +182,7 @@ namespace ProcessingIntegrationService.Controllers
 				using (var conn = new NpgsqlConnection(connString))
 				{
 					conn.Open();
-
+					 
 					// Insert some data
 					using (var cmd = new NpgsqlCommand())
 					{
