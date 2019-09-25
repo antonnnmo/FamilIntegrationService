@@ -193,5 +193,21 @@ namespace FamilIntegrationService.Controllers
 
 			return Ok();
 		}
+
+		[HttpGet("PrimaryPaymentInPurchase")]
+		public ActionResult StartPrimaryPaymentInPurchase()
+		{
+			new Task(() => { new PaymentInPurchaseManager().ExecutePrimary(); }).Start();
+
+			return Ok();
+		}
+
+		[HttpGet("Brand")]
+		public ActionResult StartBrand()
+		{
+			new Task(() => { new BrandManager().Execute(); }).Start();
+
+			return Ok();
+		}
 	}
 }

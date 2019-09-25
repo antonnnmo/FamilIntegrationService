@@ -14,14 +14,13 @@ namespace FamilIntegrationService.Providers
 
 		public static class CacheKeys
 		{
-			public static string SqlConnectionString { get { return "SqlConnectionString"; } }
-			public static string CRMSqlConnectionString { get { return "CRMSqlConnectionString"; } }
 			public static string BPMCookie { get { return "BPMCookie"; } }
 			public static string BPMLogin { get { return "BPMLogin"; } }
 			public static string BPMPassword { get { return "BPMPassword"; } }
 			public static string BPMUri { get { return "BPMUri"; } }
 			public static string BPMCSRF { get { return "BPMCSRF"; } }
 			public static string ProcessingUri { get { return "ProcessingUri"; } }
+			public static string ConnectionString { get { return "ConnectionString"; } }
 		}
 
 		public static bool GetValue<T>(string key, out T value)

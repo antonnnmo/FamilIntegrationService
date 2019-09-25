@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FamilIntegrationCore.Models;
+using FamilIntegrationService;
 using FamilIntegrationService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
@@ -42,6 +43,18 @@ namespace ProcessingIntegrationService.Controllers
 						return Ok(reader.GetString(0));
 			}
 			return Ok("123");
+		}
+
+		[HttpPost("LoadAnswerTemplate")]
+		public ActionResult LoadAnswerTemplate([FromBody]List<AnswerTemplate> templates)
+		{
+			if (templates != null)
+			{
+				AnswerTemplateCollection.SaveToDB(templates);
+				return Ok(new { Result = "success" });
+			}
+
+			return BadRequest(new { Result = "parameter errors" });
 		}
 
 		[HttpPost("LoadContactPack")]

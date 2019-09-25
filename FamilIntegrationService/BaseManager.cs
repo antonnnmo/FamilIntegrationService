@@ -19,6 +19,7 @@ namespace FamilIntegrationService
 		protected string _processingMethodName;
 		protected bool _isNeedSendToProcessing;
 		protected object _lock = new object();
+		protected object _lockRes = new object();
 
 		protected virtual List<BaseIntegrationObject> ReadPack()
 		{
@@ -39,29 +40,37 @@ namespace FamilIntegrationService
 					{
 						var crm = new CRMIntegrationProvider(true);
 						var res = crm.MakeRequest("GateIntegrationService/IntegratePack", GetBody(pack));
-						var results = JsonConvert.DeserializeObject<PackResults>(res);
 
-						if (_isNeedSendToProcessing)
+						if (!res.IsSuccess)
 						{
-							var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
-							var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
-							var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
-
-							results = new PackResults();
-
-							if (processingResults.IsSuccess)
-							{
-								results.IntegratePackResult = unsuccessResults.Union(JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr)).ToList();
-								ProceedResults(results);
-							}
-							else
-							{
-								SetProcessingErrors(pack);
-							}
+							ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
 						}
 						else
 						{
-							ProceedResults(results);
+							var results = JsonConvert.DeserializeObject<PackResults>(res.ResponseStr);
+
+							if (_isNeedSendToProcessing)
+							{
+								var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
+								var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
+								var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
+
+								results = new PackResults();
+
+								if (processingResults.IsSuccess)
+								{
+									results.IntegratePackResult = unsuccessResults.Union(JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr)).ToList();
+									ProceedResults(results);
+								}
+								else
+								{
+									SetProcessingErrors(pack);
+								}
+							}
+							else
+							{
+								ProceedResults(results);
+							}
 						}
 
 						Logger.LogInfo(_tableName, "pack finished");
@@ -102,17 +111,33 @@ namespace FamilIntegrationService
 					while (pack.Count > 0)
 					{
 						var crm = new CRMIntegrationProvider(true);
-						var res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
-						var result = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res);
+						RequestResult res = null;
+						try
+						{
+							res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
+							if (!res.IsSuccess)
+							{
+								ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
+							}
+							else
+							{
 
-						if (result.PrimaryIntegratePackResult.IsSuccess && _isNeedSendToProcessing)
-						{
-							var isProcessLoadSuccess = SendToProcessingPrimary(pack).IsSuccess;
-							ProceedResult(new PackResult() { IsSuccess = isProcessLoadSuccess }, pack);
+								var result = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
+
+								if (result.PrimaryIntegratePackResult.IsSuccess && _isNeedSendToProcessing)
+								{
+									var isProcessLoadSuccess = SendToProcessingPrimary(pack).IsSuccess;
+									ProceedResult(new PackResult() { IsSuccess = isProcessLoadSuccess }, pack);
+								}
+								else
+								{
+									ProceedResult(result.PrimaryIntegratePackResult, pack);
+								}
+							}
 						}
-						else
+						catch (Exception e)
 						{
-							ProceedResult(result.PrimaryIntegratePackResult, pack);
+							ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = $"{e.Message} {res}"}, pack);
 						}
 
 						Logger.LogInfo(_tableName, "pack finished");
@@ -222,30 +247,35 @@ namespace FamilIntegrationService
 
 		public void ProceedResult(PackResult result, List<BaseIntegrationObject> pack)
 		{
-			try
+			lock (_lockRes)
 			{
-				var query = new StringBuilder();
-
-				if (result.IsSuccess)
+				try
 				{
-					foreach (var obj in pack)
-					{
-						query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", obj.ERPId, _tableName));
-					}
-				}
-				else
-				{
-					foreach (var obj in pack)
-					{
-						query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", obj.ERPId, result.ErrorMessage, _tableName));
-					}
-				}
+					var query = new StringBuilder();
 
-				DBConnectionProvider.ExecuteNonQuery(query.ToString());
-			}
-			catch (Exception e)
-			{
-				Logger.LogError(String.Format("Ошибка обновления состояний в ШТ {0} для первичного импорта", _tableName), e);
+					if (result.IsSuccess)
+					{
+						foreach (var obj in pack)
+						{
+							query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", obj.ERPId, _tableName));
+						}
+					}
+					else
+					{
+						var errorMessage = String.IsNullOrEmpty(result.ErrorMessage) ? String.Empty : result.ErrorMessage.Replace("'", "").Replace("{", "").Replace("}", "");
+						if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
+						foreach (var obj in pack)
+						{
+							query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", obj.ERPId, errorMessage, _tableName));
+						}
+					}
+
+					DBConnectionProvider.ExecuteNonQuery(query.ToString());
+				}
+				catch (Exception e)
+				{
+					Logger.LogError(String.Format("Ошибка обновления состояний в ШТ {0} для первичного импорта", _tableName), e);
+				}
 			}
 		}
 	}

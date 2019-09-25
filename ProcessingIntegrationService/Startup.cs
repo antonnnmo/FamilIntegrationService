@@ -31,6 +31,10 @@ namespace ProcessingIntegrationService
 
 			services.AddMemoryCache();
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingUri, Configuration.GetValue<string>("ProcessingUri"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ConnectionString, Configuration.GetValue<string>("ConnectionString"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMLogin, Configuration.GetSection("BPMCredentials").GetValue<string>("login"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMPassword, Configuration.GetSection("BPMCredentials").GetValue<string>("password"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMUri, Configuration.GetSection("BPMCredentials").GetValue<string>("uri"));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
