@@ -12,7 +12,7 @@ public class BaseIntegrationLookup
 	public Guid Id { get; set; }
 }
 
-public class IntegrationLookup: BaseIntegrationLookup
+public class IntegrationLookup : BaseIntegrationLookup
 {
 	public string ERPId { get; set; }
 }
@@ -195,6 +195,35 @@ public class LookupManager
 		return result;
 	}
 
+	public List<BaseIntegrationLookup> LoadSmrCodeLookup(string name)
+	{
+		var result = new List<BaseIntegrationLookup>();
+
+		var select = new Select(_userConnection)
+						.Column("Id")
+						.Column("Name")
+						.Column("SmrCode")
+						.From(name);
+
+		using (var dbExecutor = _userConnection.EnsureDBConnection())
+		{
+			using (var reader = select.ExecuteReader(dbExecutor))
+			{
+				while (reader.Read())
+				{
+					result.Add(new IntegrationCodeLookup()
+					{
+						Id = reader.GetValue("Id", Guid.Empty),
+						Name = reader.GetValue("Name", String.Empty),
+						Code = reader.GetValue("SmrCode", String.Empty),
+					});
+				}
+			}
+		}
+
+		return result;
+	}
+
 	internal Guid? FindLookupId(string erpId, string lookupName)
 	{
 		List<BaseIntegrationLookup> values;
@@ -211,7 +240,7 @@ public class LookupManager
 			}
 		}
 
-		return values.FirstOrDefault(s => ((IntegrationCodeLookup)s).ERPId == erpId)?.Id;
+		return values.FirstOrDefault(s => ((IntegrationLookup)s).ERPId == erpId)?.Id;
 	}
 
 	internal Guid? FindLookupIdByCode(string code, string lookupName)
@@ -226,6 +255,25 @@ public class LookupManager
 			else
 			{
 				values = LoadCodeLookup(lookupName);
+				Lookups.Add(lookupName, values);
+			}
+		}
+
+		return values.FirstOrDefault(s => ((IntegrationCodeLookup)s).Code == code)?.Id;
+	}
+
+	internal Guid? FindLookupIdBySmrCode(string code, string lookupName)
+	{
+		List<BaseIntegrationLookup> values;
+		lock (_lock)
+		{
+			if (Lookups.Keys.Contains(lookupName))
+			{
+				values = Lookups[lookupName];
+			}
+			else
+			{
+				values = LoadSmrCodeLookup(lookupName);
 				Lookups.Add(lookupName, values);
 			}
 		}
