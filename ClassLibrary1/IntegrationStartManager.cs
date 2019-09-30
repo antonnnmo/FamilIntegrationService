@@ -1,4 +1,5 @@
-﻿using FamilIntegrationService;
+﻿using FamilIntegrationCore.Models;
+using FamilIntegrationService;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -160,6 +161,59 @@ namespace Terrasoft.Configuration
 			Request("Main/Brand");
 		}
 
+		public void StartShop()
+		{
+			Request("Main/Shop");
+		}
+
+		public void ExportContactsBalances()
+		{
+			while (ReadContactBalancePack())
+			{
+			}
+		}
+
+		private bool ReadContactBalancePack()
+		{
+			var pack = new List<ContactBalance>();
+			var ids = new List<QueryColumnExpression>();
+			var select = new Select(_uc)
+						.Top(500)
+						.Column("q", "Id")
+						.Column("q", "SmrContactId")
+						.Column("q", "SmrBalance")
+						.Column("c", "SmrERPId")
+						.From("SmrBalanceUpdateQueue").As("q")
+						.LeftOuterJoin("Contact").As("c").On("c", "Id").IsEqual("q", "SmrContactId")
+						.OrderByAsc("q", "CreatedOn") as Select;
+
+			using (var dbExecutor = _uc.EnsureDBConnection())
+			{
+				using (var reader = select.ExecuteReader(dbExecutor))
+				{
+					while (reader.Read())
+					{
+						pack.Add(new ContactBalance()
+						{
+							Balance = reader.GetValue("SmrBalance", 0m),
+							ERPId = reader.GetValue("SmrERPId", String.Empty)
+						});
+
+						ids.Add(Column.Parameter(reader.GetValue("Id", Guid.Empty)));
+					}
+				}
+			}
+
+			if (pack.Count == 0) return false;
+
+			if (Request(_uri, "Main/ExportContactBalance", JsonConvert.SerializeObject(pack)).Item1)
+			{
+				new Delete(_uc).From("SmrBalanceUpdateQueue").Where("Id").In(ids).Execute();
+			}
+
+			return true;
+		}
+
 		public string UpdateProcessingAnswerTemplate()
 		{
 			var templates = new List<AnswerTemplate>();
@@ -190,13 +244,14 @@ namespace Terrasoft.Configuration
 				{
 					while (reader.Read())
 					{
-						templates.Add(new AnswerTemplate() {
+						templates.Add(new AnswerTemplate()
+						{
 							End = reader.GetValue("SmrEndDate", DateTime.MaxValue),
 							Start = reader.GetValue("SmrStartDate", DateTime.MinValue),
 							From = reader.GetValue("SmrFrom", 0m),
 							To = reader.GetValue("SmrTo", 0m),
 							Price = reader.GetValue("SmrPrice", 0),
-							IsFirstTextBlock = reader.GetValue("IsFirstTextBlock", false),
+							IsFirstTextBlock = reader.GetValue("IsFirstTextBlock", 0) == 1,
 							PrefixText = reader.GetValue("SmrText1", String.Empty),
 							SuffixText = reader.GetValue("SmrText2", String.Empty)
 						});
@@ -204,14 +259,16 @@ namespace Terrasoft.Configuration
 				}
 			}
 
-			return Request(_processingMiddleWare, "Main/LoadAnswerTemplate", JsonConvert.SerializeObject(templates));
+			return Request(_processingMiddleWare, "Main/LoadAnswerTemplate", JsonConvert.SerializeObject(templates)).Item2;
 		}
 
-		private string Request(string uri, string method, string body)
+		private Tuple<bool, string> Request(string uri, string method, string body)
 		{
 			var req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/api/{1}", uri, method));
 			req.Method = "POST";
 			req.Timeout = 10 * 1000 * 60;
+			req.ContentType = "application/json";
+			req.Accept = "application/json";
 
 			using (var requestStream = req.GetRequestStream())
 			{
@@ -231,13 +288,14 @@ namespace Terrasoft.Configuration
 					{
 						using (var streamReader = new StreamReader(responseStream))
 						{
-							return streamReader.ReadToEnd();
+							return new Tuple<bool, string>(true, streamReader.ReadToEnd());
 						}
 					}
 				}
 			}
 			catch (WebException e)
 			{
+				if (e.Response == null) throw new Exception(e.Message);
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{
 					var res = streamReader.ReadToEnd();

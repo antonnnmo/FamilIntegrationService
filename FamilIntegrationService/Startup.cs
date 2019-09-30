@@ -36,6 +36,8 @@ namespace FamilIntegrationService
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMPassword, Configuration.GetSection("BPMCredentials").GetValue<string>("password"));
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMUri, Configuration.GetSection("BPMCredentials").GetValue<string>("uri"));
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingUri, Configuration.GetValue<string>("ProcessingUri"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingLogin, Configuration.GetValue<string>("ProcessingLogin"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingPasword, Configuration.GetValue<string>("ProcessingPasword"));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

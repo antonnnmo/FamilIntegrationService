@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FamilIntegrationCore.Models;
+using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FamilIntegrationService.Controllers
@@ -74,10 +76,42 @@ namespace FamilIntegrationService.Controllers
 			return Ok();
 		}
 
+		[HttpGet("PrimaryContactTag")]
+		public ActionResult StartPrimaryContactTag()
+		{
+			new Task(() => { new ContactTagManager().ExecutePrimary(); }).Start();
+
+			return Ok();
+		}
+
+		[HttpGet("ContactTag")]
+		public ActionResult StartContactTag()
+		{
+			new Task(() => { new ContactTagManager().Execute(); }).Start();
+
+			return Ok();
+		}
+
 		[HttpGet("PrimaryProductCategory")]
 		public ActionResult StartPrimaryProductCategory()
 		{
 			new Task(() => { new ProductCategoryManager().ExecutePrimary(); }).Start();
+
+			return Ok();
+		}
+
+		[HttpGet("PrimaryCard")]
+		public ActionResult StartPrimaryCard()
+		{
+			new Task(() => { new CardManager().ExecutePrimary(); }).Start();
+
+			return Ok();
+		}
+
+		[HttpGet("Card")]
+		public ActionResult StartCard()
+		{
+			new Task(() => { new CardManager().Execute(); }).Start();
 
 			return Ok();
 		}
@@ -206,6 +240,24 @@ namespace FamilIntegrationService.Controllers
 		public ActionResult StartBrand()
 		{
 			new Task(() => { new BrandManager().Execute(); }).Start();
+
+			return Ok();
+		}
+
+		[HttpGet("Test")]
+		public ActionResult Test()
+		{
+			new ProcessingIntegrationProvider().Request("LoadContactPack", String.Empty);
+			return Ok();
+		}
+
+		[HttpPost("ExportContactBalance")]
+		public ActionResult ExportBalance([FromBody]List<ContactBalance> balances)
+		{
+			foreach (var balance in balances)
+			{
+				DBConnectionProvider.ExecuteNonQuery("Insert into ContactGate(ERPId, createdOn, bonusBalance, source) VALUES('{0}', GETUTCDATE(), {1}, 1)", balance.ERPId, balance.Balance.ToString().Replace(",", "."));
+			}
 
 			return Ok();
 		}

@@ -22,6 +22,14 @@ namespace FamilIntegrationService.Providers
 			public static string BPMUri { get { return "BPMUri"; } }
 			public static string BPMCSRF { get { return "BPMCSRF"; } }
 			public static string ProcessingUri { get { return "ProcessingUri"; } }
+			public static string ProcessingLogin { get { return "ProcessingLogin"; } }
+			public static string ProcessingPasword { get { return "ProcessingPasword"; } }
+			public static string ProcessingToken { get { return "ProcessingToken"; } }
+		}
+
+		internal static void GetValue(object processingLogin, out string login)
+		{
+			throw new NotImplementedException();
 		}
 
 		public static bool GetValue<T>(string key, out T value)

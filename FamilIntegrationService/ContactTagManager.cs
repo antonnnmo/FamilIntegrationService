@@ -4,27 +4,26 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FamilIntegrationService
 {
-	public class BrandTypeManager : BaseManager
+	public class ContactTagManager : BaseManager
 	{
-		private static readonly string _selectQuery = @"SELECT TOP ({0}) 
-			  [gateId]
-			  ,[ERPId]
-			  ,[source]
-			  ,[status]
-			  ,[errorMessage]
-			  ,CONVERT(nvarchar(50), createdOn, 21) as CreatedOn
-			  ,[name]
-		  FROM [BrandTypeGate]
-		 Where Status = 0 And Source = 0";
+		private static readonly string _selectQuery = @"SELECT TOP ({0}) [gateId]
+      ,[ERPId]
+      ,[source]
+      ,[status]
+      ,[errorMessage]
+      ,CONVERT(nvarchar(50), createdOn, 21) as CreatedOn
+      ,[name]
+      ,[contactId]
+  FROM [ContactTagGate]
+ Where Status = 0 And Source = 0";
 
-		protected List<BrandType> _objects;
-
-		public BrandTypeManager()
+		public ContactTagManager()
 		{
-			_tableName = "BrandTypeGate";
+			_tableName = "ContactTagGate";
 			_isNeedSendToProcessing = false;
 		}
 
@@ -39,10 +38,11 @@ namespace FamilIntegrationService
 					{
 						while (reader != null && reader.Read())
 						{
-							pack.Add(new BrandType()
+							pack.Add(new ContactTag()
 							{
 								Name = reader.GetValue("name", String.Empty),
 								ERPId = reader.GetValue("ERPId", String.Empty),
+								ContactId = reader.GetValue("contactId", String.Empty),
 								Id = Guid.NewGuid(),
 							});
 						}
@@ -60,8 +60,7 @@ namespace FamilIntegrationService
 
 		protected override string GetSerializedCollection(List<BaseIntegrationObject> pack)
 		{
-			return JsonConvert.SerializeObject(pack.Select(p => (BrandType)p).ToList());
+			return JsonConvert.SerializeObject(pack.Select(p => (ContactTag)p).ToList());
 		}
 	}
 }
-

@@ -64,7 +64,8 @@ namespace FamilIntegrationService
 								}
 								else
 								{
-									SetProcessingErrors(pack);
+									SetProcessingErrors(pack, processingResults.ResponseStr);
+									ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
 								}
 							}
 							else
@@ -87,9 +88,11 @@ namespace FamilIntegrationService
 			Logger.LogInfo("Finished", _tableName);
 		}
 
-		private void SetProcessingErrors(List<BaseIntegrationObject> pack)
+		private void SetProcessingErrors(List<BaseIntegrationObject> pack, string responseStr)
 		{
-			DBConnectionProvider.ExecuteNonQuery(String.Format("Update {1} Set Status = 3 Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId))), _tableName));
+			var errorMessage = String.IsNullOrEmpty(responseStr) ? String.Empty : responseStr.Replace("'", "''").Replace("{", "").Replace("}", "");
+			if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
+			DBConnectionProvider.ExecuteNonQuery(String.Format("Update {1} Set Status = 2, ErrorMessage = '{2}' Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId))), _tableName, errorMessage));
 		}
 
 		private RequestResult SendToProcessing(List<BaseIntegrationObject> pack)

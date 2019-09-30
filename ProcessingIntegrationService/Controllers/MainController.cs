@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using FamilIntegrationCore.Models;
 using FamilIntegrationService;
 using FamilIntegrationService.Models;
+using FamilIntegrationService.Providers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
@@ -16,35 +18,6 @@ namespace ProcessingIntegrationService.Controllers
 	[ApiController]
 	public class MainController : ControllerBase
 	{
-		private static readonly string connString = "Host=stnd-prsrv-07;Username=admin;Password=password;Database=loyalty";
-		// GET api/values
-		[HttpGet]
-		public ActionResult Get()
-		{
-			using (var conn = new NpgsqlConnection(connString))
-			{
-				conn.Open();
-
-				// Insert some data
-				using (var cmd = new NpgsqlCommand())
-				{
-					cmd.Connection = conn;
-					cmd.CommandText = @"INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"") VALUES (@p1, @p2, @p3)";
-					cmd.Parameters.AddWithValue("p1", "bla");
-					cmd.Parameters.AddWithValue("p2", "79999999999");
-					cmd.Parameters.AddWithValue("p3", Guid.NewGuid());
-					cmd.ExecuteNonQuery();
-				}
-
-				// Retrieve all rows
-				using (var cmd = new NpgsqlCommand(@"SELECT ""Name"" FROM ""public"".""Contact""", conn))
-				using (var reader = cmd.ExecuteReader())
-					while (reader.Read())
-						return Ok(reader.GetString(0));
-			}
-			return Ok("123");
-		}
-
 		[HttpPost("LoadAnswerTemplate")]
 		public ActionResult LoadAnswerTemplate([FromBody]List<AnswerTemplate> templates)
 		{
@@ -58,12 +31,13 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadContactPack")]
+		[Authorize]
 		public ActionResult LoadContactPack([FromBody]IEnumerable<ContactProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
 			var result = new List<PackResult>();
 
-			using (var conn = new NpgsqlConnection(connString))
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
 
@@ -91,6 +65,7 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadPrimaryContactPack")]
+		[Authorize]
 		public ActionResult LoadPrimaryContactPack([FromBody]IEnumerable<ContactProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
@@ -102,7 +77,7 @@ namespace ProcessingIntegrationService.Controllers
 
 			sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}')", c.Name, c.Phone, c.Id))));
 
-			using (var conn = new NpgsqlConnection(connString))
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
 
@@ -119,6 +94,7 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadPrimaryShopPack")]
+		[Authorize]
 		public ActionResult LoadPrimaryShopPack([FromBody]IEnumerable<ShopProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
@@ -130,7 +106,7 @@ namespace ProcessingIntegrationService.Controllers
 
 			sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}')", c.Name, c.Code, c.Id))));
 
-			using (var conn = new NpgsqlConnection(connString))
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
 
@@ -147,12 +123,13 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadShopPack")]
+		[Authorize]
 		public ActionResult LoadShopPack([FromBody]IEnumerable<ShopProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
 			var result = new List<PackResult>();
 
-			using (var conn = new NpgsqlConnection(connString))
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
 
@@ -180,6 +157,7 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadPrimaryProductPack")]
+		[Authorize]
 		public ActionResult LoadPrimaryProductPack([FromBody]IEnumerable<ProductProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
@@ -192,7 +170,7 @@ namespace ProcessingIntegrationService.Controllers
 
 				sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}')", c.Name, c.Code, c.Id))));
 
-				using (var conn = new NpgsqlConnection(connString))
+				using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 				{
 					conn.Open();
 					 
@@ -214,12 +192,13 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadProductPack")]
+		[Authorize]
 		public ActionResult LoadProductPack([FromBody]IEnumerable<ProductProcessingModel> contacts)
 		{
 			if (contacts == null) return BadRequest("Ошибка передачи аргументов");
 			var result = new List<PackResult>();
 
-			using (var conn = new NpgsqlConnection(connString))
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
 

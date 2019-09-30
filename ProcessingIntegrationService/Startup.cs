@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using FamilIntegrationService.Providers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ProcessingIntegrationService
 {
@@ -28,6 +31,22 @@ namespace ProcessingIntegrationService
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+			.AddJwtBearer(options =>
+			{
+				options.RequireHttpsMetadata = false;
+				options.SaveToken = true;
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidIssuer = "FamilIntegrationService",
+					ValidAudience = "IntegrationUser",
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("gfdiog40-]kgf-043uo")),
+					ValidateLifetime = true,
+					ValidateIssuerSigningKey = true,
+					ClockSkew = TimeSpan.Zero
+				};
+			}); ;
 
 			services.AddMemoryCache();
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingUri, Configuration.GetValue<string>("ProcessingUri"));
@@ -52,6 +71,7 @@ namespace ProcessingIntegrationService
 				app.UseHsts();
 			}
 
+			app.UseAuthentication();
 			app.UseHttpsRedirection();
 			app.UseMvc();
 		}
