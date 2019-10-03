@@ -26,5 +26,27 @@ namespace FamilIntegrationService.Models
 		public string ErrorMessage { get; set; }
 		[JsonProperty]
 		public string ContactId { get; set; }
+        public List<CustomField> CustomFields { get; set; }
 	}
+
+    public class CustomField
+    {
+        [JsonProperty]
+        public string Name { get; set; }
+        [JsonProperty]
+        public string Value { get; set; }
+
+        public CustomField() { }
+
+        public CustomField(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", Name, Value);
+        }
+    }
 }

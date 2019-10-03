@@ -11,6 +11,7 @@ using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using ProcessingIntegrationService.Managers;
 
 namespace ProcessingIntegrationService.Controllers
 {
@@ -224,5 +225,19 @@ namespace ProcessingIntegrationService.Controllers
 
 			return Ok(result);
 		}
-	}
+
+        [HttpPost("LoadPrimaryCardPack")]
+        [Authorize]
+        public ActionResult LoadPrimaryCardPack([FromBody]IEnumerable<CardProcessingModel> cards)
+        {
+            return new CardManager().LoadPrimaryCardPack(cards);
+        }
+
+        [HttpPost("LoadCardPack")]
+        [Authorize]
+        public ActionResult LoadCardPack([FromBody]IEnumerable<CardProcessingModel> cards)
+        {
+            return new CardManager().LoadCardPack(cards);
+        }
+    }
 }

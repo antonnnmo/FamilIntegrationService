@@ -53,6 +53,11 @@ namespace FamilIntegrationService
 							{
 								var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
 								var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
+                                foreach (var r in successResults)
+                                {
+                                    var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
+                                    if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
+                                }
 								var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
 
 								results = new PackResults();
@@ -220,6 +225,14 @@ namespace FamilIntegrationService
 			var processingIntegrationProvider = new ProcessingIntegrationProvider();
 			return processingIntegrationProvider.Request(_processingPrimaryMethodName, GetProcessingPackBody(pack));
 		}
+
+        protected string GetCustomFieldsValue(BaseIntegrationObject o, string field)
+        {
+            if (o.CustomFields == null) return string.Empty;
+            var res = o.CustomFields.FirstOrDefault(f => f.Name == field);
+            if (res != null) return res.Value ?? string.Empty;
+            return string.Empty;
+        }
 
 		protected void ProceedResults(PackResults results)
 		{

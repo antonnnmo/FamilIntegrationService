@@ -74,6 +74,16 @@ namespace FamilIntegrationService
 			return pack;
 		}
 
+        private int GetCardState(string stateId)
+        {
+            var id = Guid.Empty;
+            if (!Guid.TryParse(stateId, out id)) return 0;
+            if (id == new Guid("EF6E31F0-1897-46DE-A32A-3DC95051A719")) return 1;
+            if (id == new Guid("4058FC82-DD15-471E-8990-A4C01941BFF2")) return 0;
+            if (id == new Guid("5CAFD033-D179-4D4F-9F7E-BD5244B56F43")) return 2;
+            return 0;
+        }
+
 		protected override string GetSerializedCollection(List<BaseIntegrationObject> pack)
 		{
 			return JsonConvert.SerializeObject(pack.Select(p => (Card)p).ToList());
@@ -81,8 +91,8 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Card)c).Select(c => new CardProcessingModel() { ERPId = c.ERPId, Id = c.Id, Number = c.Number });
-			return JsonConvert.SerializeObject(contacts);
+            var contacts = pack.Select(c => (Card)c).Select(c => new CardProcessingModel() { ERPId = c.ERPId, Id = c.Id, Number = c.Number, ContactId = GetCustomFieldsValue(c, "ContactId"), CardId = GetCustomFieldsValue(c, "CardId"), State = GetCardState(GetCustomFieldsValue(c, "CardStatusId")), IsMain = c.IsMain });
+            return JsonConvert.SerializeObject(contacts);
 		}
 	}
 }
