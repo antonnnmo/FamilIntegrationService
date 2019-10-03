@@ -13,7 +13,7 @@ namespace FamilIntegrationService.Models
 	public class PrimaryIntegratePackResponse
 	{
 		[JsonProperty]
-		public PackResult PrimaryIntegratePackResult { get; set; }
+		public List<PackResult> PrimaryIntegratePackResult { get; set; }
 	}
 
 	public class PackResult

@@ -30,7 +30,7 @@ namespace ProcessingIntegrationService.Managers
                     }
                 }
 
-                return Ok();
+                return Ok(models.Select(m => new PackResult() { IsSuccess = true, Id = m.ERPId }).ToList());
             }
             catch (Exception e)
             {

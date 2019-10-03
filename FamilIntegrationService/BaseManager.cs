@@ -129,8 +129,36 @@ namespace FamilIntegrationService
 							}
 							else
 							{
+                                var results = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
+                                if (_isNeedSendToProcessing)
+                                {
+                                    var successResults = results.PrimaryIntegratePackResult.Where(r => r.IsSuccess);
+                                    var unsuccessResults = results.PrimaryIntegratePackResult.Where(r => !r.IsSuccess);
+                                    foreach (var r in successResults)
+                                    {
+                                        var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
+                                        if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
+                                    }
+                                    var processingResults = SendToProcessingPrimary(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
 
-								var result = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
+                                    results = new PrimaryIntegratePackResponse();
+
+                                    if (processingResults.IsSuccess)
+                                    {
+                                        results.PrimaryIntegratePackResult = unsuccessResults.Union(JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr)).ToList();
+                                        ProceedPrimaryResults(results);
+                                    }
+                                    else
+                                    {
+                                        SetProcessingErrors(pack, processingResults.ResponseStr);
+                                        ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
+                                    }
+                                }
+                                else
+                                {
+                                    ProceedPrimaryResults(results);
+                                }
+                                /*var result = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
 
 								if (result.PrimaryIntegratePackResult.IsSuccess && _isNeedSendToProcessing)
 								{
@@ -140,8 +168,8 @@ namespace FamilIntegrationService
 								else
 								{
 									ProceedResult(result.PrimaryIntegratePackResult, pack);
-								}
-							}
+								}*/
+                            }
 						}
 						catch (Exception e)
 						{
@@ -261,7 +289,34 @@ namespace FamilIntegrationService
 			}
 		}
 
-		public void ProceedResult(PackResult result, List<BaseIntegrationObject> pack)
+        protected void ProceedPrimaryResults(PrimaryIntegratePackResponse results)
+        {
+            try
+            {
+                var query = new StringBuilder();
+                foreach (var result in results.PrimaryIntegratePackResult)
+                {
+                    if (result.IsSuccess)
+                    {
+                        query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", result.Id, _tableName));
+                    }
+                    else
+                    {
+                        var errorMessage = String.IsNullOrEmpty(result.ErrorMessage) ? String.Empty : result.ErrorMessage.Replace("'", "''").Replace("{", "").Replace("}", "");
+                        if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
+                        query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", result.Id, errorMessage, _tableName));
+                    }
+                }
+
+                DBConnectionProvider.ExecuteNonQuery(query.ToString());
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(JsonConvert.SerializeObject(results), e);
+            }
+        }
+
+        public void ProceedResult(PackResult result, List<BaseIntegrationObject> pack)
 		{
 			lock (_lockRes)
 			{
