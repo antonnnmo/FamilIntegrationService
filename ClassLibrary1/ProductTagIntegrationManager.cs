@@ -26,39 +26,27 @@ namespace Terrasoft.Configuration
 		{
 			var objs = JsonConvert.DeserializeObject<List<ProductGateInfo>>(request);
 			var lookupManager = new LookupManager(UserConnection);
+			var productTreeLookupCollection = new ProductTreeLookupCollection(UserConnection);
 			var result = new List<PackResult>();
 			foreach (var info in objs)
 			{
 				try
 				{
-					var directionId = lookupManager.FindLookupIdByName(info.Direction, "SmrProductDirection");
-					if (directionId == null)
+					var group = productTreeLookupCollection.FindGroup(info.Group);
+					if (group == null)
 					{
 						result.Add(new PackResult()
 						{
 							IsSuccess = false,
 							Id = info.ERPId,
-							ErrorMessage = "Дирекция продукта не найдена среди существующих в bpm’online"
+							ErrorMessage = "Группа продукта не найдена среди существующих в bpm’online"
 						});
 
 						continue;
 					}
 
-					var categoryId = lookupManager.FindLookupIdByName(info.Category, "ProductCategory");
-					if (categoryId == null)
-					{
-						result.Add(new PackResult()
-						{
-							IsSuccess = false,
-							Id = info.ERPId,
-							ErrorMessage = "Категория продукта не найдена среди существующих в bpm’online"
-						});
-
-						continue;
-					}
-
-					var subCategoryId = lookupManager.FindLookupIdByName(info.SubCategory, "ProductType");
-					if (subCategoryId == null)
+					var subCategory = group.Parent;
+					if (subCategory == null)
 					{
 						result.Add(new PackResult()
 						{
@@ -70,14 +58,63 @@ namespace Terrasoft.Configuration
 						continue;
 					}
 
-					var groupId = lookupManager.FindLookupIdByName(info.Group, "SmrProductGroup");
-					if (groupId == null)
+					if (subCategory.Name != info.SubCategory)
 					{
 						result.Add(new PackResult()
 						{
 							IsSuccess = false,
 							Id = info.ERPId,
-							ErrorMessage = "Группа продукта не найдена среди существующих в bpm’online"
+							ErrorMessage = "Подкатегория продукта не соответствует подкатегории в bpm’online"
+						});
+
+						continue;
+					}
+
+					var category = subCategory.Parent;
+					if (category == null)
+					{
+						result.Add(new PackResult()
+						{
+							IsSuccess = false,
+							Id = info.ERPId,
+							ErrorMessage = "Категория продукта не найдена среди существующих в bpm’online"
+						});
+
+						continue;
+					}
+
+					if (category.Name != info.Category)
+					{
+						result.Add(new PackResult()
+						{
+							IsSuccess = false,
+							Id = info.ERPId,
+							ErrorMessage = "Категория продукта не соответствует категории в bpm’online"
+						});
+
+						continue;
+					}
+
+					var direction = category.Parent;
+					if (direction == null)
+					{
+						result.Add(new PackResult()
+						{
+							IsSuccess = false,
+							Id = info.ERPId,
+							ErrorMessage = "Дирекция продукта не найдена среди существующих в bpm’online"
+						});
+
+						continue;
+					}
+
+					if (direction.Name != info.Direction)
+					{
+						result.Add(new PackResult()
+						{
+							IsSuccess = false,
+							Id = info.ERPId,
+							ErrorMessage = "Диреция продукта не соответствует дирекции в bpm’online"
 						});
 
 						continue;
@@ -109,39 +146,15 @@ namespace Terrasoft.Configuration
 						continue;
 					}
 
-					var select = new Select(UserConnection).Top(1).Column("Id").Column("Code").From(_tableName).Where("SmrERPId").IsEqual(Column.Parameter(info.ERPId)) as Select;
-					var objId = Guid.Empty;
-					var code = String.Empty;
-
-					using (var dbExecutor = UserConnection.EnsureDBConnection())
-					{
-						using (var reader = select.ExecuteReader(dbExecutor))
-						{
-							if (reader.Read())
-							{
-								objId = reader.GetValue("Id", Guid.Empty);
-								code = reader.GetValue("Code", String.Empty);
-							}
-						}
-					}
-
+					var objId = (new Select(UserConnection).Top(1).Column("Id").From(_tableName).Where("Code").IsEqual(Column.Parameter(info.Code)) as Select).ExecuteScalar<Guid>();
+					
 					if (objId == Guid.Empty)
 					{
-						GetInsertQuery(info, directionId, categoryId, subCategoryId, groupId, sizeId, tradeMarkId).Execute();
+						GetInsertQuery(info, direction.Id, category.Id, subCategory.Id, group.Id, sizeId, tradeMarkId).Execute();
 					}
 					else
 					{
-						if (!String.IsNullOrEmpty(code))
-						{
-							result.Add(new PackResult()
-							{
-								IsSuccess = false,
-								Id = info.ERPId,
-								ErrorMessage = "Продукт с таким кодом уже существует в bpm’online"
-							});
-							continue;
-						}
-						GetUpdateQuery(info, directionId, categoryId, subCategoryId, groupId, sizeId, tradeMarkId).Execute();
+						GetUpdateQuery(info, direction.Id, category.Id, subCategory.Id, group.Id, sizeId, tradeMarkId).Execute();
 					}
 
 					result.Add(new PackResult()
@@ -172,20 +185,104 @@ namespace Terrasoft.Configuration
 		{
 			var objs = JsonConvert.DeserializeObject<List<ProductGateInfo>>(request);
 			var lookupManager = new LookupManager(UserConnection);
+			var productTreeLookupCollection = new ProductTreeLookupCollection(UserConnection);
 			var result = new List<PackResult>();
 			var sb = new StringBuilder();
 			sb.AppendLine(GetInsertHead());
 			var values = new List<string>();
 			foreach (var info in objs)
 			{
-				var directionId = lookupManager.FindLookupIdByName(info.Direction, "SmrProductDirection");
-				var categoryId = lookupManager.FindLookupIdByName(info.Category, "ProductCategory");
-				var subCategoryId = lookupManager.FindLookupIdByName(info.SubCategory, "ProductType");
-				var groupId = lookupManager.FindLookupIdByName(info.Group, "SmrProductGroup");
+				var group = productTreeLookupCollection.FindGroup(info.Group);
+				if (group == null)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Группа продукта не найдена среди существующих в bpm’online"
+					});
+
+					continue;
+				}
+
+				var subCategory = group.Parent;
+				if (subCategory == null)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Подкатегория продукта не найдена среди существующих в bpm’online"
+					});
+
+					continue;
+				}
+
+				if (subCategory.Name != info.SubCategory)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Подкатегория продукта не соответствует подкатегории в bpm’online"
+					});
+
+					continue;
+				}
+
+				var category = subCategory.Parent;
+				if (category == null)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Категория продукта не найдена среди существующих в bpm’online"
+					});
+
+					continue;
+				}
+
+				if (category.Name != info.Category)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Категория продукта не соответствует категории в bpm’online"
+					});
+
+					continue;
+				}
+
+				var direction = category.Parent;
+				if (direction == null)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Дирекция продукта не найдена среди существующих в bpm’online"
+					});
+
+					continue;
+				}
+
+				if (direction.Name != info.Direction)
+				{
+					result.Add(new PackResult()
+					{
+						IsSuccess = false,
+						Id = info.ERPId,
+						ErrorMessage = "Диреция продукта не соответствует дирекции в bpm’online"
+					});
+
+					continue;
+				}
 				var sizeId = lookupManager.FindLookupIdByName(info.Size, "SmrProductSize");
 				var tradeMarkId = lookupManager.FindLookupIdByName(info.Brand, "Trademark");
 
-				values.Add(GetInsertValues(info, directionId, categoryId, subCategoryId, groupId, sizeId, tradeMarkId));
+				values.Add(GetInsertValues(info, direction.Id, category.Id, subCategory.Id, group.Id, sizeId, tradeMarkId));
 			}
 
 			sb.AppendLine(string.Join(",", values));

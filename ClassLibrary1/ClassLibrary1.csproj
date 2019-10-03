@@ -114,6 +114,7 @@
     <Compile Include="LookupManager.cs" />
     <Compile Include="Class2.cs" />
     <Compile Include="ProductTagIntegrationManager.cs" />
+    <Compile Include="ProductTreeLookup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
