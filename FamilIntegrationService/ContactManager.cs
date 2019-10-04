@@ -88,7 +88,8 @@ namespace FamilIntegrationService
 					}
 				}
 
-				DBConnectionProvider.ExecuteNonQuery(String.Format("Update ContactGate Set Status = 3 Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId)))));
+                if (pack.Count > 0)
+                    DBConnectionProvider.ExecuteNonQuery(String.Format("Update ContactGate Set Status = 3 Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId)))));
 			}
 
 			return pack;
@@ -101,8 +102,14 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel() { ERPId = c.ERPId, Id = c.Id, Name = String.Format("{0} {1} {2}", c.Surname, c.FirstName, c.MiddleName), Phone = c.Phone });
+			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ContactId") ?? c.Id, Name = GetContactName(c.Surname, c.FirstName, c.MiddleName), Phone = c.Phone });
 			return JsonConvert.SerializeObject(contacts);
 		}
-	}
+
+        private string GetContactName(string surname, string firstName, string middleName)
+        {
+            var names = new List<string> { surname, firstName, middleName };
+            return string.Join(" ", names);
+        }
+    }
 }

@@ -12,7 +12,7 @@ namespace ProcessingIntegrationService.Managers
 {
     public abstract class BaseManager : ControllerBase
     {
-        public ActionResult LoadPrimaryCardPack(IEnumerable<BaseProcessingModel> models)
+        public ActionResult LoadPrimaryPack(IEnumerable<BaseProcessingModel> models)
         {
             if (models == null) return BadRequest("Ошибка передачи аргументов");
             try
@@ -41,7 +41,7 @@ namespace ProcessingIntegrationService.Managers
         protected abstract string GetPrimaryQuery(IEnumerable<BaseProcessingModel> models);
         protected abstract string GetQuery(BaseProcessingModel model);
 
-        public ActionResult LoadCardPack(IEnumerable<BaseProcessingModel> models)
+        public ActionResult LoadPack(IEnumerable<BaseProcessingModel> models)
         {
             if (models == null) return BadRequest("Ошибка передачи аргументов");
             var result = new List<PackResult>();

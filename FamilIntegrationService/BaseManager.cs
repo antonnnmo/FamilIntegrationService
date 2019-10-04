@@ -262,7 +262,20 @@ namespace FamilIntegrationService
             return string.Empty;
         }
 
-		protected void ProceedResults(PackResults results)
+        protected Guid? GetCustomFieldsGuidValue(BaseIntegrationObject o, string field)
+        {
+            var guid = Guid.Empty;
+            if (o.CustomFields == null) return null;
+            var res = o.CustomFields.FirstOrDefault(f => f.Name == field);
+            if (res != null)
+            {
+                if (Guid.TryParse(res.Value ?? string.Empty, out guid))
+                    return guid;
+            }
+            return null;
+        }
+
+        protected void ProceedResults(PackResults results)
 		{
 			try
 			{
