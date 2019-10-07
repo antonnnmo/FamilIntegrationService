@@ -22,7 +22,16 @@ namespace ProcessingIntegrationService.Managers
         protected override string GetQuery(BaseProcessingModel model)
         {
             var shop = (ShopProcessingModel)model;
-            return string.Format(@"INSERT INTO ""public"".""Shop"" (""Name"", ""Code"", ""Id"") VALUES ('{0}', '{1}', '{2}')", shop.Name, shop.Code, shop.Id);
+            return string.Format(
+                @"
+                do $$ begin
+                if (select 1 from ""Shop"" where ""Id""='{2}') then
+                    UPDATE ""public"".""Shop"" SET ""Name"" = '{0}', ""Code"" = '{1}' WHERE ""Id"" = '{2}';
+                ELSE
+                    INSERT INTO ""public"".""Shop"" (""Name"", ""Code"", ""Id"") VALUES ('{0}', '{1}', '{2}');
+                END IF;
+                END $$
+                ", shop.Name, shop.Code, shop.Id);
         }
     }
 }

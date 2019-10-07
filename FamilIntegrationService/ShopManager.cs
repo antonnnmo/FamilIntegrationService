@@ -37,7 +37,7 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Shop)c).Select(c => new ShopProcessingModel() { ERPId = c.ERPId, Id = c.Id, Name = c.Name, Code = c.Code});
+			var contacts = pack.Select(c => (Shop)c).Select(c => new ShopProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id, Name = c.Name, Code = c.Code});
 			return JsonConvert.SerializeObject(contacts);
 		}
 

@@ -102,7 +102,7 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ContactId") ?? c.Id, Name = GetContactName(c.Surname, c.FirstName, c.MiddleName), Phone = c.Phone });
+			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id, Name = GetContactName(c.Surname, c.FirstName, c.MiddleName), Phone = c.Phone });
 			return JsonConvert.SerializeObject(contacts);
 		}
 
