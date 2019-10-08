@@ -35,8 +35,18 @@ namespace FamilIntegrationService
 			{
 				var task = new Task(() =>
 				{
-					var pack = ReadPack();
-					while (pack.Count > 0)
+                    var pack = new List<BaseIntegrationObject>();
+                    try
+                    {
+                        pack = ReadPack();
+                        Logger.LogInfo(string.Format("Прочитано данных из {0}: {1}", _tableName, pack.Count), "");
+                    }
+                    catch(Exception e)
+                    {
+                        Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
+                    }
+                    
+                    while (pack.Count > 0)
 					{
 						var crm = new CRMIntegrationProvider(true);
 						var res = crm.MakeRequest("GateIntegrationService/IntegratePack", GetBody(pack));
@@ -80,8 +90,17 @@ namespace FamilIntegrationService
 						}
 
 						Logger.LogInfo(_tableName, "pack finished");
-						pack = ReadPack();
-					}
+                        pack = new List<BaseIntegrationObject>();
+                        try
+                        {
+                            pack = ReadPack();
+                            Logger.LogInfo(string.Format("Прочитано данных из {0}: {1}", _tableName, pack.Count), "");
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
+                        }
+                    }
 				});
 
 				task.Start();
@@ -115,8 +134,17 @@ namespace FamilIntegrationService
 			{
 				var task = new Task(() =>
 				{
-					var pack = ReadPack();
-					while (pack.Count > 0)
+                    var pack = new List<BaseIntegrationObject>();
+                    try
+                    {
+                        pack = ReadPack();
+                        Logger.LogInfo(string.Format("Прочитано данных из {0}: {1}", _tableName, pack.Count), "");
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
+                    }
+                    while (pack.Count > 0)
 					{
 						var crm = new CRMIntegrationProvider(true);
 						RequestResult res = null;
@@ -177,8 +205,17 @@ namespace FamilIntegrationService
 						}
 
 						Logger.LogInfo(_tableName, "pack finished");
-						pack = ReadPack();
-					}
+                        pack = new List<BaseIntegrationObject>();
+                        try
+                        {
+                            pack = ReadPack();
+                            Logger.LogInfo(string.Format("Прочитано данных из {0}: {1}", _tableName, pack.Count), "");
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
+                        }
+                    }
 				});
 
 				task.Start();

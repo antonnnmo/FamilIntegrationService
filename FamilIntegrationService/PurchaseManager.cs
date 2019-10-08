@@ -110,7 +110,7 @@ namespace FamilIntegrationService
 								},
 								Date = purchase.PDate,
 								Number = purchase.Number,
-								PaymentForm = purchase.PaymentForm,
+								PaymentForm = GetPaymentFormCode(purchase.PaymentForm),
 								ShopCode = purchase.ShopCode,
 								Payments = purchase.PaymentsInPurchase.Select(p => new Payment() { Amount = p.Amount, Type = p.Type }),
 								Products = purchase.ProductsInPurchase.Select(p => new PCProduct() { Index = i++, Amount = p.Amount, Price = p.Price, ProductCode = p.ProductCode, Quantity = p.Quantity }),
@@ -142,6 +142,17 @@ namespace FamilIntegrationService
 
 			Logger.LogInfo("Finished", _tableName);
 		}
+
+        private string GetPaymentFormCode(string name)
+        {
+            switch(name)
+            {
+                case "PurchaseGate": return "0";
+                case "Credit": return "1";
+                case "Installment plan": return "2";
+            }
+            return "0";
+        }
 
 		private List<ProductInPurchase> ReadProducts(string erpId)
 		{
