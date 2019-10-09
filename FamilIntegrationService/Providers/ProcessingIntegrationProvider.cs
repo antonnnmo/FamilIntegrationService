@@ -129,5 +129,66 @@ namespace FamilIntegrationService.Providers
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
 			}
 		}
-	}
+
+        public RequestResult RequestMethod(string method, string body, bool isNeedRepeat = true)
+        {
+            var req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/{1}", _uri, method));
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.Accept = "application/json";
+            req.Credentials = System.Net.CredentialCache.DefaultCredentials;
+            req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
+            req.Timeout = 10 * 1000 * 60;
+            req.Headers.Add("Authorization", $"Bearer {_token}");
+
+            using (var requestStream = req.GetRequestStream())
+            {
+                using (var streamWriter = new StreamWriter(requestStream))
+                {
+                    streamWriter.Write(body);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
+            }
+
+            try
+            {
+                using (var response = req.GetResponse())
+                {
+                    using (var responseStream = response.GetResponseStream())
+                    {
+                        using (var streamReader = new StreamReader(responseStream))
+                        {
+                            return new RequestResult() { IsSuccess = true, ResponseStr = streamReader.ReadToEnd() };
+                        }
+                    }
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Response == null)
+                {
+                    return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
+                }
+
+                if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    if (Authorize())
+                    {
+                        if (isNeedRepeat) return Request(method, body, false);
+                    }
+                }
+
+                using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
+                {
+                    var res = streamReader.ReadToEnd();
+                    return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
+                }
+            }
+            catch (Exception e)
+            {
+                return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
+            }
+        }
+    }
 }

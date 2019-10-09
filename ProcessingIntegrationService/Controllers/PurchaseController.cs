@@ -18,6 +18,14 @@ namespace ProcessingIntegrationService.Controllers
 	{
 		public static string noNamePhone = "70000000000";
 		public static string sberbankPhone = "70000000001";
+        private string _processingUrl = "";
+        private string _processingSecret = "";
+
+        public PurchaseController()
+        {
+            GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingUri, out _processingUrl);
+            GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingSecret, out _processingSecret);
+        }
 
 		[HttpPost("confirm")]
 		public ActionResult Confirm([FromBody]PurchaseConfirmRequest request)
@@ -52,13 +60,13 @@ namespace ProcessingIntegrationService.Controllers
 						var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
 						if (prefixTemplate != null)
 						{
-							responseObj.BenefitSecond += $"{prefixTemplate.PrefixText} {Convert.ToInt32(diff/prefixTemplate.Price)} {prefixTemplate.SuffixText} ";
+							responseObj.BenefitSecond += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
 						}
 
 						var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
 						if (suffixTemplate != null)
 						{
-							responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(diff /suffixTemplate.Price)} {suffixTemplate.SuffixText}";
+							responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
 						}
 					}
 					return Ok(responseObj);
@@ -99,14 +107,14 @@ namespace ProcessingIntegrationService.Controllers
 
 		private RequestResult PRRequest(string body)
 		{
-			var req = (HttpWebRequest)WebRequest.Create("http://stnd-prsrv-07:5000/purchase/confirm");
+            var req = (HttpWebRequest)WebRequest.Create(string.Format("{0}/purchase/confirm", _processingUrl));
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
 			req.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Timeout = 10 * 1000 * 60;
-			req.Headers.Add("Authorization", "Bearer secret");
+			req.Headers.Add("Authorization", string.Format("Bearer {0}", _processingSecret));
 
 			using (var requestStream = req.GetRequestStream())
 			{

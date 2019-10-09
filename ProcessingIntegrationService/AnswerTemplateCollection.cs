@@ -24,7 +24,8 @@ namespace FamilIntegrationService
 
 		public static void SaveToDB(List<AnswerTemplate> templates)
 		{
-			using (var conn = new NpgsqlConnection(GetConnectionString()))
+            CreateTableIfNotExist();
+            using (var conn = new NpgsqlConnection(GetConnectionString()))
 			{
 				conn.Open();
 				using (var cmd = new NpgsqlCommand(@"delete from ""public"".""AnswerTemplate""", conn))
@@ -33,7 +34,7 @@ namespace FamilIntegrationService
 				}
 				foreach (var template in templates)
 				{
-					using (var cmd = new NpgsqlCommand(@"INSERT INTO ""public"".""AnswerTemplate"" (""PrefixText"", ""SuffixText"", ""From"", ""To"", ""Price"", ""Start"", ""End"", ""IsFirstTextBlock"") VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8)", conn))
+					using (var cmd = new NpgsqlCommand(@"INSERT INTO ""public"".""AnswerTemplate"" (""PrefixText"", ""SuffixText"", ""From"", ""To"", ""Price"", ""Start"", ""End"", ""IsFirstTextBlock"", ""Id"") VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)", conn))
 					{
 						cmd.Parameters.AddWithValue("p1", template.PrefixText);
 						cmd.Parameters.AddWithValue("p2", template.SuffixText);
@@ -43,13 +44,41 @@ namespace FamilIntegrationService
 						cmd.Parameters.AddWithValue("p6", template.Start);
 						cmd.Parameters.AddWithValue("p7", template.End);
 						cmd.Parameters.AddWithValue("p8", template.IsFirstTextBlock ? 1: 0);
-						cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue("p9", Guid.NewGuid());
+                        cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			_templates = templates;
 
 		}
+
+        private static void CreateTableIfNotExist()
+        {
+            var command =
+            @"CREATE TABLE IF NOT EXISTS public.""AnswerTemplate""
+            (
+               ""Id"" uuid PRIMARY KEY,
+               ""PrefixText"" text,
+               ""SuffixText"" text,
+               ""From"" decimal,
+               ""To"" decimal,
+               ""Price"" decimal,
+               ""Start"" timestamp without time zone,
+               ""End"" timestamp without time zone,
+               ""IsFirstTextBlock"" integer
+            );";
+            using (var conn = new NpgsqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+
+                // Retrieve all rows
+                using (var cmd = new NpgsqlCommand(command, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
 
 		private static string GetConnectionString() {
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ConnectionString, out string connString);
@@ -58,7 +87,8 @@ namespace FamilIntegrationService
 
 		private static void LoadFromDB()
 		{
-			_templates = new List<AnswerTemplate>();
+            CreateTableIfNotExist();
+            _templates = new List<AnswerTemplate>();
 			
 			using (var conn = new NpgsqlConnection(GetConnectionString()))
 			{

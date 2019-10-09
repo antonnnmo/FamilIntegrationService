@@ -102,7 +102,7 @@ namespace FamilIntegrationService
 							int i = 0;
 							var request = new PurchaseConfirmRequest()
 							{
-								CashdeskCode = purchase.Number,
+								CashdeskCode = purchase.CashDeskCode,
 								Client = new Client()
 								{
 									CardNumber = purchase.CardNumber,
@@ -116,12 +116,15 @@ namespace FamilIntegrationService
 								Products = purchase.ProductsInPurchase.Select(p => new PCProduct() { Index = i++, Amount = p.Amount, Price = p.Price, ProductCode = p.ProductCode, Quantity = p.Quantity }),
 								Id = Guid.NewGuid().ToString()
 							};
-							var res = Request(request.ToJson());
+
+                            var res = Request(request.ToJson());
 							Logger.LogInfo(i.ToString(), res.IsSuccess ? "success" : res.ResponseStr);
 
 							if (res.IsSuccess)
 							{
-								results.IntegratePackResult.Add(new PackResult() { Id = purchase.ERPId, IsSuccess = true });
+                                var resRequest = JsonConvert.DeserializeObject<PackResult>(res.ResponseStr);
+                                resRequest.Id = purchase.ERPId;
+                                results.IntegratePackResult.Add(resRequest);
 							}
 							else
 							{
@@ -201,7 +204,7 @@ namespace FamilIntegrationService
 
 		public RequestResult Request(string body)
 		{
-			var req = (HttpWebRequest)WebRequest.Create("http://stnd-prsrv-07:5000/purchase/confirm");
+            /*var req = (HttpWebRequest)WebRequest.Create("http://stnd-prsrv-07:5000/purchase/confirm");
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
@@ -240,8 +243,10 @@ namespace FamilIntegrationService
 					var res = streamReader.ReadToEnd();
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
 				}
-			}
-		}
+			}*/
+            var processingIntegrationProvider = new ProcessingIntegrationProvider();
+            return processingIntegrationProvider.RequestMethod("purchase/confirm", body);
+        }
 
 		protected override string GetSerializedCollection(List<BaseIntegrationObject> pack)
 		{
