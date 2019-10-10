@@ -55,12 +55,13 @@ namespace ProcessingIntegrationService.Controllers
 						responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
 
 						var now = DateTime.UtcNow;
-						responseObj.BenefitSecond = String.Empty;
+                        responseObj.BenefitFirst = String.Empty;
+                        responseObj.BenefitSecond = String.Empty;
 
 						var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
 						if (prefixTemplate != null)
 						{
-							responseObj.BenefitSecond += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
+							responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
 						}
 
 						var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
