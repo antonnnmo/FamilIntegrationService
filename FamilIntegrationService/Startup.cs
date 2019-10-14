@@ -38,7 +38,10 @@ namespace FamilIntegrationService
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingUri, Configuration.GetValue<string>("ProcessingUri"));
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingLogin, Configuration.GetValue<string>("ProcessingLogin"));
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingPasword, Configuration.GetValue<string>("ProcessingPasword"));
-		}
+            GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.PackSize, Configuration.GetSection("IntegrationSettings").GetValue<int>("PackSize"));
+            GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ThreadCount, Configuration.GetSection("IntegrationSettings").GetValue<int>("ThreadCount"));
+            GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.CrmRequestTimeout, Configuration.GetSection("IntegrationSettings").GetValue<int>("CrmRequestTimeout"));
+        }
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)

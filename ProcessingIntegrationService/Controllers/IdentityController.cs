@@ -48,7 +48,8 @@ namespace ProcessingIntegrationService.Controllers
 
 		private bool ValidateUser(IdentityViewModel request)
 		{
-			var passwordHash = GetPasswordHash(request.Password);
+            CreateTableIfNotExists();
+            var passwordHash = GetPasswordHash(request.Password);
 			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
 				conn.Open();
@@ -56,7 +57,30 @@ namespace ProcessingIntegrationService.Controllers
 			}
 		}
 
-		private string GetPasswordHash(string password)
+        private void CreateTableIfNotExists()
+        {
+            using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
+            {
+                conn.Open();
+                var query =
+                    @"CREATE TABLE IF NOT EXISTS public.""User"" (
+                    ""Login"" text NULL,
+                    ""Password"" text NULL
+                    );
+
+                    do $$ begin
+                    if not exists(select 1 from ""User"") then
+                        Insert into public.""User""(""Login"", ""Password"")
+	                    VALUES('FamilGateService','5u5eGqJgifJL5mPA4RHGoyRMHKc0YkZBIkkKyjiWOoU=');
+                    END IF;
+                    END $$
+
+                    ";
+                new NpgsqlCommand(query, conn).ExecuteNonQuery();
+            }
+        }
+
+        private string GetPasswordHash(string password)
 		{
 			using (SHA256 mySHA256 = SHA256.Create())
 			{

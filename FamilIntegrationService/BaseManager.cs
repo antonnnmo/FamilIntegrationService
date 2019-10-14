@@ -21,6 +21,12 @@ namespace FamilIntegrationService
 		protected object _lock = new object();
 		protected object _lockRes = new object();
 
+        public BaseManager()
+        {
+            GlobalCacheReader.GetValue<int>(GlobalCacheReader.CacheKeys.PackSize, out packSize);
+            GlobalCacheReader.GetValue<int>(GlobalCacheReader.CacheKeys.ThreadCount, out threadCount);
+        }
+
 		protected virtual List<BaseIntegrationObject> ReadPack()
 		{
 			return new List<BaseIntegrationObject>();
@@ -116,7 +122,7 @@ namespace FamilIntegrationService
 		{
 			var errorMessage = String.IsNullOrEmpty(responseStr) ? String.Empty : responseStr.Replace("'", "''").Replace("{", "").Replace("}", "");
 			if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
-			DBConnectionProvider.ExecuteNonQuery(String.Format("Update {1} Set Status = 2, ErrorMessage = '{2}' Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId))), _tableName, errorMessage));
+			DBConnectionProvider.ExecuteNonQuery(String.Format("Update {1} Set Status = 2, ErrorMessage = '{2}' Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.CorrectERPId))), _tableName, errorMessage));
 		}
 
 		private RequestResult SendToProcessing(List<BaseIntegrationObject> pack)
@@ -321,13 +327,13 @@ namespace FamilIntegrationService
 				{
 					if (result.IsSuccess)
 					{
-						query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", result.Id, _tableName));
+						query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", result.GetCorrectId(), _tableName));
 					}
 					else
 					{
 						var errorMessage = String.IsNullOrEmpty(result.ErrorMessage) ? String.Empty : result.ErrorMessage.Replace("'", "''").Replace("{", "").Replace("}", "");
 						if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
-						query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", result.Id, errorMessage, _tableName));
+						query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", result.GetCorrectId(), errorMessage, _tableName));
 					}
 				}
 
@@ -348,13 +354,13 @@ namespace FamilIntegrationService
                 {
                     if (result.IsSuccess)
                     {
-                        query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", result.Id, _tableName));
+                        query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", result.GetCorrectId(), _tableName));
                     }
                     else
                     {
                         var errorMessage = String.IsNullOrEmpty(result.ErrorMessage) ? String.Empty : result.ErrorMessage.Replace("'", "''").Replace("{", "").Replace("}", "");
                         if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
-                        query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", result.Id, errorMessage, _tableName));
+                        query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", result.GetCorrectId(), errorMessage, _tableName));
                     }
                 }
 
@@ -378,7 +384,7 @@ namespace FamilIntegrationService
 					{
 						foreach (var obj in pack)
 						{
-							query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", obj.ERPId, _tableName));
+							query.AppendLine(String.Format("Update {1} Set Status = 1 Where ERPId = '{0}';", obj.CorrectERPId, _tableName));
 						}
 					}
 					else
@@ -387,7 +393,7 @@ namespace FamilIntegrationService
 						if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
 						foreach (var obj in pack)
 						{
-							query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", obj.ERPId, errorMessage, _tableName));
+							query.AppendLine(String.Format("Update {2} Set Status = 2, ErrorMessage = '{1}' Where ERPId = '{0}';", obj.CorrectERPId, errorMessage, _tableName));
 						}
 					}
 

@@ -25,7 +25,10 @@ namespace FamilIntegrationService.Providers
 			public static string ProcessingLogin { get { return "ProcessingLogin"; } }
 			public static string ProcessingPasword { get { return "ProcessingPasword"; } }
 			public static string ProcessingToken { get { return "ProcessingToken"; } }
-		}
+            public static string PackSize { get { return "PackSize"; } }
+            public static string ThreadCount { get { return "ThreadCount"; } }
+            public static string CrmRequestTimeout { get { return "CrmRequestTimeout"; } }
+        }
 
 		internal static void GetValue(object processingLogin, out string login)
 		{

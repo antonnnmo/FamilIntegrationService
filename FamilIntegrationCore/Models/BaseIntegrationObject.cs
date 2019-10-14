@@ -14,6 +14,14 @@ namespace FamilIntegrationCore.Models
 		public string ERPId { get; set; }
         public List<CustomField> CustomFields { get; set; }
 
+        public string CorrectERPId
+        {
+            get
+            {
+                return (ERPId ?? "").Replace("'", "''");
+            }
+        }
+
         public BaseIntegrationObject()
         {
             CustomFields = new List<CustomField>();

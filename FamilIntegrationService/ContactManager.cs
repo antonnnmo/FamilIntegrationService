@@ -89,7 +89,7 @@ namespace FamilIntegrationService
 				}
 
                 if (pack.Count > 0)
-                    DBConnectionProvider.ExecuteNonQuery(String.Format("Update ContactGate Set Status = 3 Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.ERPId)))));
+                    DBConnectionProvider.ExecuteNonQuery(String.Format("Update ContactGate Set Status = 3 Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.CorrectERPId)))));
 			}
 
 			return pack;

@@ -13,14 +13,16 @@ namespace FamilIntegrationService.Providers
 		private CookieContainer _bpmCookieContainer;
 		private string _csrf;
 		private bool _useLocalCookie;
+        private int _timeout;
 
-		public CRMIntegrationProvider(bool useLocalCookie = false)
+        public CRMIntegrationProvider(bool useLocalCookie = false)
 		{
 			_useLocalCookie = useLocalCookie;
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMLogin, out _login);
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMPassword, out _password);
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMUri, out _uri);
-		}
+            GlobalCacheReader.GetValue<int>(GlobalCacheReader.CacheKeys.CrmRequestTimeout, out _timeout);
+        }
 
 		//public void SendSaleToCRM(Guid saleId, bool isNeedCreateProject = false)
 		//{
@@ -105,7 +107,7 @@ namespace FamilIntegrationService.Providers
 			req.CookieContainer = bpmCookieContainer;
 			req.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
-			req.Timeout = 10 * 1000 * 60;
+			req.Timeout = _timeout;
 
 			var csrfToken = String.Empty;
 

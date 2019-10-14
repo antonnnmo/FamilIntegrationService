@@ -9,13 +9,15 @@ namespace ProcessingIntegrationService.Managers
 {
     public class ContactManager : BaseManager
     {
+        private readonly Guid _defaultBrandId = new Guid("fa2e8409-c20e-464b-a034-16024a39a3d7");
+
         protected override string GetPrimaryQuery(IEnumerable<BaseProcessingModel> models)
         {
             var contacts = models.Select(m => (ContactProcessingModel)m);
             var sb = new StringBuilder();
-            sb.AppendLine(@"INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"") VALUES ");
+            sb.AppendLine(@"INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"", ""BrandId"") VALUES ");
 
-            sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}')", c.Name, c.Phone, c.Id))));
+            sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}')", c.Name, c.Phone, c.Id, _defaultBrandId))));
             return sb.ToString();
         }
 
@@ -26,13 +28,13 @@ namespace ProcessingIntegrationService.Managers
                 (@"
                 do $$ begin
                 if (select 1 from ""Contact"" where ""Id""='{2}') then
-                    UPDATE ""public"".""Contact"" SET ""Name"" = '{0}', ""Phone"" = '{1}' WHERE ""Id"" = '{2}';
+                    UPDATE ""public"".""Contact"" SET ""Name"" = '{0}', ""Phone"" = '{1}', ""BrandId"" = '{3}' WHERE ""Id"" = '{2}';
                 ELSE
-                    INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"") VALUES ('{0}', '{1}', '{2}');
+                    INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"", ""BrandId"") VALUES ('{0}', '{1}', '{2}', '{3}');
                 END IF;
                 END $$
                 ", 
-                contact.Name, contact.Phone, contact.Id.ToString());
+                contact.Name, contact.Phone, contact.Id.ToString(), _defaultBrandId);
         }
     }
 }

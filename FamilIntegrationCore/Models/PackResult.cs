@@ -27,6 +27,11 @@ namespace FamilIntegrationService.Models
 		[JsonProperty]
 		public string ContactId { get; set; }
         public List<CustomField> CustomFields { get; set; }
+
+        public string GetCorrectId()
+        {
+            return (Id ?? "").Replace("'", "''");
+        }
 	}
 
     public class CustomField
