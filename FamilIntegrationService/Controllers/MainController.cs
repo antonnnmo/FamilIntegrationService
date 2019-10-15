@@ -272,7 +272,17 @@ namespace FamilIntegrationService.Controllers
 		{
 			foreach (var balance in balances)
 			{
-				DBConnectionProvider.ExecuteNonQuery("Insert into ContactGate(ERPId, createdOn, bonusBalance, source) VALUES('{0}', GETUTCDATE(), {1}, 1)", balance.ERPId, balance.Balance.ToString().Replace(",", "."));
+				DBConnectionProvider.ExecuteNonQuery(
+                    string.Format(
+                        @"IF NOT EXISTS(select top 1 1 from ContactGate where ERPId = '{0}' and source = 1)
+                        BEGIN
+                            Insert into ContactGate(ERPId, createdOn, bonusBalance, source) VALUES('{0}', GETUTCDATE(), {1}, 1)
+                        END
+                        ELSE BEGIN
+                            update ContactGate set bonusBalance = {1} where ERPId = '{0}' and source = 1 
+                        END
+                        ", 
+                    balance.ERPId, balance.Balance.ToString().Replace(",", ".")));
 			}
 
 			return Ok();

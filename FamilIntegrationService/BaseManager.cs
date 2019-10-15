@@ -59,7 +59,7 @@ namespace FamilIntegrationService
                         var crm = new CRMIntegrationProvider(true);
 						var res = crm.MakeRequest("GateIntegrationService/IntegratePack", GetBody(pack));
 
-                        Logger.LogInfo(string.Format("Запрос {0} с CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+                        Logger.LogInfo(string.Format("Запрос {0} к CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                         if (!res.IsSuccess)
 						{
@@ -83,7 +83,7 @@ namespace FamilIntegrationService
 
                                 var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
 
-                                Logger.LogInfo(string.Format("Запрос {0} с процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+                                Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                                 results = new PackResults();
 
@@ -169,7 +169,7 @@ namespace FamilIntegrationService
 
                             res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
 
-                            Logger.LogInfo(string.Format("Запрос {0} с CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+                            Logger.LogInfo(string.Format("Запрос {0} к CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                             if (!res.IsSuccess)
 							{
@@ -192,7 +192,7 @@ namespace FamilIntegrationService
 
                                     var processingResults = SendToProcessingPrimary(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
 
-                                    Logger.LogInfo(string.Format("Запрос {0} с процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+                                    Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                                     results = new PrimaryIntegratePackResponse();
 

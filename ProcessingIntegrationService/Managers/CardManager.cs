@@ -16,7 +16,7 @@ namespace ProcessingIntegrationService.Managers
             sb.AppendLine(@"INSERT INTO ""public"".""Card"" (""Id"", ""Number"", ""State"", ""IsMain"", ""ContactId"") VALUES ");
 
             sb.AppendLine(String.Join(",", cards.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}', {4})",
-                c.CardId != "" ? c.CardId : c.Id.ToString(), c.Number, c.State, c.IsMain,
+                c.CardId != "" ? c.CardId : c.Id.ToString(), (c.Number ?? "").Replace("'", "''"), c.State, c.IsMain,
                 c.ContactId != "" ? string.Format("'{0}'", c.ContactId) : "null"))));
             return sb.ToString();
         }
@@ -34,7 +34,7 @@ namespace ProcessingIntegrationService.Managers
                 END IF;
                 END $$
                 ", 
-                c.CardId != "" ? c.CardId : c.Id.ToString(), c.Number, c.State, c.IsMain,
+                c.CardId != "" ? c.CardId : c.Id.ToString(), (c.Number ?? "").Replace("'", "''"), c.State, c.IsMain,
                 c.ContactId != "" ? string.Format("'{0}'", c.ContactId) : "null"
             );
         }

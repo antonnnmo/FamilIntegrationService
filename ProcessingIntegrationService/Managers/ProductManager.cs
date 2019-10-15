@@ -15,7 +15,7 @@ namespace ProcessingIntegrationService.Managers
             var sb = new StringBuilder();
             sb.AppendLine(@"INSERT INTO ""public"".""Product"" (""Name"", ""Code"", ""Id"") VALUES ");
 
-            sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}', '{2}')", c.Name, c.Code, c.Id))));
+            sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}', '{2}')", (c.Name ?? "").Replace("'", "''"), (c.Code ?? "").Replace("'", "''"), c.Id))));
             return sb.ToString();
         }
 
@@ -31,7 +31,7 @@ namespace ProcessingIntegrationService.Managers
                     INSERT INTO ""public"".""Product"" (""Name"", ""Code"", ""Id"") VALUES ('{0}', '{1}', '{2}');
                 END IF;
                 END $$",
-                product.Name, product.Code, product.Id);
+                (product.Name ?? "").Replace("'", "''"), (product.Code ?? "").Replace("'", "''"), product.Id);
         }
     }
 }

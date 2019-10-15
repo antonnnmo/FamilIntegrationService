@@ -17,7 +17,7 @@ namespace ProcessingIntegrationService.Managers
             var sb = new StringBuilder();
             sb.AppendLine(@"INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"", ""BrandId"") VALUES ");
 
-            sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}')", c.Name, c.Phone, c.Id, _defaultBrandId))));
+            sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}')", (c.Name ?? "").Replace("'", "''"), (c.Phone ?? "").Replace("'", "''"), c.Id, _defaultBrandId))));
             return sb.ToString();
         }
 
@@ -34,7 +34,7 @@ namespace ProcessingIntegrationService.Managers
                 END IF;
                 END $$
                 ", 
-                contact.Name, contact.Phone, contact.Id.ToString(), _defaultBrandId);
+                (contact.Name ?? "").Replace("'", "''"), (contact.Phone ?? "").Replace("'", "''"), contact.Id.ToString(), _defaultBrandId);
         }
     }
 }
