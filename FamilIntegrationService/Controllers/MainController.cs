@@ -172,7 +172,23 @@ namespace FamilIntegrationService.Controllers
 			return Ok();
 		}
 
-		[HttpGet("PrimarySMS")]
+        [HttpGet("PrimaryCity")]
+        public ActionResult StartPrimaryCity()
+        {
+            new Task(() => { new CityManager().ExecutePrimary(); }).Start();
+
+            return Ok();
+        }
+
+        [HttpGet("City")]
+        public ActionResult StartCity()
+        {
+            new Task(() => { new CityManager().Execute(); }).Start();
+
+            return Ok();
+        }
+
+        [HttpGet("PrimarySMS")]
 		public ActionResult StartPrimarySMS()
 		{
 			new Task(() => { new SMSManager().ExecutePrimary(); }).Start();
