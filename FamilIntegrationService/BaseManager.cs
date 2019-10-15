@@ -54,10 +54,14 @@ namespace FamilIntegrationService
                     
                     while (pack.Count > 0)
 					{
-						var crm = new CRMIntegrationProvider(true);
+                        var now = DateTime.Now;
+
+                        var crm = new CRMIntegrationProvider(true);
 						var res = crm.MakeRequest("GateIntegrationService/IntegratePack", GetBody(pack));
 
-						if (!res.IsSuccess)
+                        Logger.LogInfo(string.Format("Запрос {0} с CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+
+                        if (!res.IsSuccess)
 						{
 							ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
 						}
@@ -74,9 +78,14 @@ namespace FamilIntegrationService
                                     var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
                                     if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
                                 }
-								var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
 
-								results = new PackResults();
+                                now = DateTime.Now;
+
+                                var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
+
+                                Logger.LogInfo(string.Format("Запрос {0} с процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+
+                                results = new PackResults();
 
 								if (processingResults.IsSuccess)
 								{
@@ -156,8 +165,13 @@ namespace FamilIntegrationService
 						RequestResult res = null;
 						try
 						{
-							res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
-							if (!res.IsSuccess)
+                            var now = DateTime.Now;
+
+                            res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
+
+                            Logger.LogInfo(string.Format("Запрос {0} с CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+
+                            if (!res.IsSuccess)
 							{
 								ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
 							}
@@ -173,7 +187,12 @@ namespace FamilIntegrationService
                                         var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
                                         if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
                                     }
+
+                                    now = DateTime.Now;
+
                                     var processingResults = SendToProcessingPrimary(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
+
+                                    Logger.LogInfo(string.Format("Запрос {0} с процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                                     results = new PrimaryIntegratePackResponse();
 
