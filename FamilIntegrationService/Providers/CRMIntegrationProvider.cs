@@ -52,7 +52,7 @@ namespace FamilIntegrationService.Providers
 				if (!GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMCookie, out bpmCookieContainer))
 				{
 					var csrf = Authorize(out req, out bpmCookieContainer);
-					GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCookie, bpmCookieContainer, TimeSpan.FromMinutes(20));
+                    GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCookie, bpmCookieContainer, TimeSpan.FromMinutes(20));
 					GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCSRF, csrf, TimeSpan.FromMinutes(20));
 				}
 			}
@@ -62,8 +62,8 @@ namespace FamilIntegrationService.Providers
 
 		private string Authorize(out HttpWebRequest req, out CookieContainer bpmCookieContainer)
 		{
-			//Вызов сервиса с авторизацией    
-			req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/ServiceModel/AuthService.svc/Login", _uri));
+            //Вызов сервиса с авторизацией    
+            req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/ServiceModel/AuthService.svc/Login", _uri));
 
 			req.Method = "POST";
 			req.ContentType = "application/json";
@@ -100,7 +100,7 @@ namespace FamilIntegrationService.Providers
 
 		private RequestResult Request(string bpmServiceUri, string body, out HttpWebRequest req, CookieContainer bpmCookieContainer)
 		{
-			req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/0/rest/{1}", _uri, bpmServiceUri));
+            req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/0/rest/{1}", _uri, bpmServiceUri));
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
@@ -114,7 +114,7 @@ namespace FamilIntegrationService.Providers
 			if (_useLocalCookie) csrfToken = _csrf;
 			else GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMCSRF, out csrfToken);
 
-			if (!String.IsNullOrEmpty(csrfToken))
+            if (!String.IsNullOrEmpty(csrfToken))
 			{
 				req.Headers.Add("BPMCSRF", csrfToken);
 			}
@@ -144,7 +144,7 @@ namespace FamilIntegrationService.Providers
 			}
 			catch (WebException e)
 			{
-				if (e.Response == null)
+                if (e.Response == null)
 				{
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " null response" };
 				}

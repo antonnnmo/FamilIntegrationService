@@ -198,8 +198,17 @@ namespace FamilIntegrationService
 
                                     if (processingResults.IsSuccess)
                                     {
-                                        results.PrimaryIntegratePackResult = unsuccessResults.Union(JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr)).ToList();
-                                        ProceedPrimaryResults(results);
+                                        try
+                                        {
+                                            var procList = JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr);
+                                            results.PrimaryIntegratePackResult = unsuccessResults.Union(procList).ToList();
+                                            ProceedPrimaryResults(results);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = $"{e.Message} {processingResults.ResponseStr}" }, pack);
+                                            Logger.LogInfo(processingResults.ResponseStr, "");
+                                        }
                                     }
                                     else
                                     {
@@ -211,17 +220,6 @@ namespace FamilIntegrationService
                                 {
                                     ProceedPrimaryResults(results);
                                 }
-                                /*var result = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
-
-								if (result.PrimaryIntegratePackResult.IsSuccess && _isNeedSendToProcessing)
-								{
-									var isProcessLoadSuccess = SendToProcessingPrimary(pack).IsSuccess;
-									ProceedResult(new PackResult() { IsSuccess = isProcessLoadSuccess }, pack);
-								}
-								else
-								{
-									ProceedResult(result.PrimaryIntegratePackResult, pack);
-								}*/
                             }
 						}
 						catch (Exception e)
@@ -339,7 +337,7 @@ namespace FamilIntegrationService
 
         protected void ProceedResults(PackResults results)
 		{
-			try
+            try
 			{
 				var query = new StringBuilder();
 				foreach (var result in results.IntegratePackResult)
@@ -356,8 +354,10 @@ namespace FamilIntegrationService
 					}
 				}
 
-				DBConnectionProvider.ExecuteNonQuery(query.ToString());
-			}
+                var sql = query.ToString();
+                if (!string.IsNullOrEmpty(sql))
+                    DBConnectionProvider.ExecuteNonQuery(sql);
+            }
 			catch (Exception e)
 			{
 				Logger.LogError(JsonConvert.SerializeObject(results), e);
@@ -383,7 +383,9 @@ namespace FamilIntegrationService
                     }
                 }
 
-                DBConnectionProvider.ExecuteNonQuery(query.ToString());
+                var sql = query.ToString();
+                if (!string.IsNullOrEmpty(sql))
+                    DBConnectionProvider.ExecuteNonQuery(sql);
             }
             catch (Exception e)
             {
@@ -416,7 +418,9 @@ namespace FamilIntegrationService
 						}
 					}
 
-					DBConnectionProvider.ExecuteNonQuery(query.ToString());
+                    var sql = query.ToString();
+                    if (!string.IsNullOrEmpty(sql))
+                        DBConnectionProvider.ExecuteNonQuery(sql);
 				}
 				catch (Exception e)
 				{
