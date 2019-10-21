@@ -25,7 +25,7 @@ namespace ProcessingIntegrationService.Managers
 
 			sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"({0}, '{1}')", c.Price.ToString().Replace(",", "."), (c.Code ?? "").Replace("'", "''")))));
 			var res = sb.ToString();
-			Logger.LogInfo("запрос на добавление продукта", res);
+			//Logger.LogInfo("запрос на добавление продукта", res);
 
 			return res;
         }
