@@ -402,7 +402,7 @@ namespace FamilIntegrationService
             return null;
         }
 
-        protected void ProceedResults(PackResults results)
+        protected virtual void ProceedResults(PackResults results)
 		{
             try
 			{
@@ -460,7 +460,7 @@ namespace FamilIntegrationService
             }
         }
 
-        public void ProceedResult(PackResult result, List<BaseIntegrationObject> pack)
+        public virtual void ProceedResult(PackResult result, List<BaseIntegrationObject> pack)
 		{
 			lock (_lockRes)
 			{

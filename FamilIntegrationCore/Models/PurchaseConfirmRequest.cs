@@ -33,8 +33,8 @@
 		[JsonProperty("number")]
 		public string Number { get; set; }
 
-		[JsonProperty("cashdeskCode")]
-		public string CashdeskCode { get; set; }
+		/*[JsonProperty("cashdeskCode")]
+		public string CashdeskCode { get; set; }*/
 
 		[JsonProperty("promoCodes")]
 		public string[] PromoCodes { get; set; }

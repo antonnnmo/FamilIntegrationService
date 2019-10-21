@@ -102,7 +102,7 @@ namespace FamilIntegrationService
 							int i = 0;
 							var request = new PurchaseConfirmRequest()
 							{
-								CashdeskCode = purchase.CashDeskCode,
+								//CashdeskCode = purchase.CashDeskCode,
 								Client = new Client()
 								{
 									CardNumber = purchase.CardNumber,
