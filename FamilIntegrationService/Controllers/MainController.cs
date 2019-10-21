@@ -263,7 +263,7 @@ namespace FamilIntegrationService.Controllers
 		[HttpGet("Test")]
 		public ActionResult Test()
 		{
-			new ProcessingIntegrationProvider().Request("LoadContactPack", String.Empty);
+			new ProcessingIntegrationProvider(false).Request("LoadContactPack", String.Empty);
 			return Ok();
 		}
 

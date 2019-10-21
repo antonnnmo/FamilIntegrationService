@@ -38,6 +38,7 @@ namespace FamilIntegrationService
 		{
 			_tableName = "ProductGate";
 			_isNeedSendToProcessing = true;
+			_isNeedSendToPersonalArea = true;
 			_processingMethodName = "LoadProductPack";
 			_processingPrimaryMethodName= "LoadPrimaryProductPack";
 		}
@@ -90,7 +91,10 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Product)c).Select(c => new ProductProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id, Code = c.Code, Name = c.Name });
+			var contacts = pack.Select(c => (Product)c).Select(c => new ProductProcessingModel()
+			{
+				ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id, Code = c.Code, Name = c.Name, Price = c.RecommendedRetailPrice
+			});
 			return JsonConvert.SerializeObject(contacts);
 		}
 	}

@@ -36,6 +36,7 @@ namespace FamilIntegrationService
 			_processingPrimaryMethodName = "LoadPrimaryCardPack";
 			_processingMethodName = "LoadCardPack";
 			_isNeedSendToProcessing = true;
+			_isNeedSendToPersonalArea = true;
 		}
 
 		protected override List<BaseIntegrationObject> ReadPack()

@@ -18,6 +18,7 @@ namespace FamilIntegrationService
 		protected string _processingPrimaryMethodName;
 		protected string _processingMethodName;
 		protected bool _isNeedSendToProcessing;
+		protected bool _isNeedSendToPersonalArea;
 		protected object _lock = new object();
 		protected object _lockRes = new object();
 
@@ -63,39 +64,61 @@ namespace FamilIntegrationService
 
                         if (!res.IsSuccess)
 						{
+							Logger.LogInfo("1", "1");
 							ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
 						}
 						else
 						{
+							Logger.LogInfo("2", "1");
 							var results = JsonConvert.DeserializeObject<PackResults>(res.ResponseStr);
+
+							var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
+							var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
+							Logger.LogInfo("2", "2");
+							ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
+							Logger.LogInfo("2", "3");
+
+							foreach (var r in successResults)
+							{
+								var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
+								if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
+							}
+							Logger.LogInfo("2", "4");
 
 							if (_isNeedSendToProcessing)
 							{
-								var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
-								var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
-                                foreach (var r in successResults)
-                                {
-                                    var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
-                                    if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
-                                }
-
-                                now = DateTime.Now;
-
-                                var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
-
-                                Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
-
-                                results = new PackResults();
-
-								if (processingResults.IsSuccess)
+								Logger.LogInfo("2", "45");
+								var isProcessingSuccess = false;
+								try
 								{
-									results.IntegratePackResult = unsuccessResults.Union(JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr)).ToList();
-									ProceedResults(results);
+									isProcessingSuccess = SendToProcessing(pack, out now, out results, successResults, false);
+								}
+								catch (Exception e)
+								{
+									Logger.LogError("32", e);
+								}
+								Logger.LogInfo("2", "5");
+
+								successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
+								unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
+
+								ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
+								Logger.LogInfo("2", "6");
+
+								if (_isNeedSendToPersonalArea)
+								{
+									var isPersonalAreaSuccess = SendToProcessing(pack, out now, out results, successResults, true);
+
+									Logger.LogInfo("2", "7");
+
+									if (isPersonalAreaSuccess)
+									{
+										ProceedResults(results);
+									}
 								}
 								else
 								{
-									SetProcessingErrors(pack, processingResults.ResponseStr);
-									ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
+									ProceedResults(results);
 								}
 							}
 							else
@@ -127,17 +150,70 @@ namespace FamilIntegrationService
 			Logger.LogInfo("Finished", _tableName);
 		}
 
+		private bool SendToProcessing(List<BaseIntegrationObject> pack, out DateTime now, out PackResults results, IEnumerable<PackResult> successResults, bool isUsePA)
+		{
+			now = DateTime.Now;
+
+			var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList(), isUsePA, _processingMethodName);
+
+			Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+
+			results = new PackResults();
+
+			if (processingResults.IsSuccess)
+			{
+				results.IntegratePackResult = JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr);
+				return true;
+			}
+			else
+			{
+				SetProcessingErrors(pack, processingResults.ResponseStr);
+				return false;
+			}
+		}
+
+		private bool SendToProcessingPrimary(List<BaseIntegrationObject> pack, DateTime now, out PrimaryIntegratePackResponse results, IEnumerable<PackResult> successResults, bool isUsePA)
+		{
+			now = DateTime.Now;
+
+			var processingResults = SendToProcessing(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList(), isUsePA, _processingPrimaryMethodName);
+
+			Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+
+			results = new PrimaryIntegratePackResponse();
+
+			if (processingResults.IsSuccess)
+			{
+				try
+				{
+					results.PrimaryIntegratePackResult = JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr);
+					return true;
+				}
+				catch (Exception e)
+				{
+					ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = $"{e.Message} {processingResults.ResponseStr}" }, pack);
+					Logger.LogInfo(processingResults.ResponseStr, "");
+					return false;
+				}
+			}
+			else
+			{
+				SetProcessingErrors(pack, processingResults.ResponseStr);
+				return false;
+			}
+		}
+
+		private RequestResult SendToProcessing(List<BaseIntegrationObject> pack, bool isUsePA, string methodName)
+		{
+			var processingIntegrationProvider = new ProcessingIntegrationProvider(isUsePA);
+			return processingIntegrationProvider.Request(methodName, GetProcessingPackBody(pack));
+		}
+
 		private void SetProcessingErrors(List<BaseIntegrationObject> pack, string responseStr)
 		{
 			var errorMessage = String.IsNullOrEmpty(responseStr) ? String.Empty : responseStr.Replace("'", "''").Replace("{", "").Replace("}", "");
 			if (errorMessage.Length > 250) errorMessage = errorMessage.Substring(0, 250);
 			DBConnectionProvider.ExecuteNonQuery(String.Format("Update {1} Set Status = 2, ErrorMessage = '{2}' Where ERPId in ({0})", String.Join(",", pack.Select(p => String.Format("'{0}'", p.CorrectERPId))), _tableName, errorMessage));
-		}
-
-		private RequestResult SendToProcessing(List<BaseIntegrationObject> pack)
-		{
-			var processingIntegrationProvider = new ProcessingIntegrationProvider();
-			return processingIntegrationProvider.Request(_processingMethodName, GetProcessingPackBody(pack));
 		}
 
 		public virtual void ExecutePrimary()
@@ -178,45 +254,38 @@ namespace FamilIntegrationService
 							else
 							{
                                 var results = JsonConvert.DeserializeObject<PrimaryIntegratePackResponse>(res.ResponseStr);
-                                if (_isNeedSendToProcessing)
-                                {
-                                    var successResults = results.PrimaryIntegratePackResult.Where(r => r.IsSuccess);
-                                    var unsuccessResults = results.PrimaryIntegratePackResult.Where(r => !r.IsSuccess);
-                                    foreach (var r in successResults)
-                                    {
-                                        var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
-                                        if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
-                                    }
+								var successResults = results.PrimaryIntegratePackResult.Where(r => r.IsSuccess);
+								var unsuccessResults = results.PrimaryIntegratePackResult.Where(r => !r.IsSuccess);
 
-                                    now = DateTime.Now;
+								ProceedPrimaryResults(new PrimaryIntegratePackResponse() { PrimaryIntegratePackResult = unsuccessResults.ToList() });
 
-                                    var processingResults = SendToProcessingPrimary(pack.Where(p => successResults.FirstOrDefault(r => r.Id == p.ERPId) != null).ToList());
+								foreach (var r in successResults)
+								{
+									var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
+									if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
+								}
 
-                                    Logger.LogInfo(string.Format("Запрос {0} к процессингу выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+								if (_isNeedSendToProcessing)
+								{
+									var isProcessingResultSuccess = SendToProcessingPrimary(pack, now, out results, successResults, false);
 
-                                    results = new PrimaryIntegratePackResponse();
-
-                                    if (processingResults.IsSuccess)
-                                    {
-                                        try
-                                        {
-                                            var procList = JsonConvert.DeserializeObject<List<PackResult>>(processingResults.ResponseStr);
-                                            results.PrimaryIntegratePackResult = unsuccessResults.Union(procList).ToList();
-                                            ProceedPrimaryResults(results);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = $"{e.Message} {processingResults.ResponseStr}" }, pack);
-                                            Logger.LogInfo(processingResults.ResponseStr, "");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        SetProcessingErrors(pack, processingResults.ResponseStr);
-                                        ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
-                                    }
-                                }
-                                else
+									if (isProcessingResultSuccess)
+									{
+										if (_isNeedSendToPersonalArea)
+										{
+											var isPersonalAreaResultSuccess = SendToProcessingPrimary(pack, now, out results, successResults, true);
+											if (isPersonalAreaResultSuccess)
+											{
+												ProceedPrimaryResults(results);
+											}
+										}
+										else
+										{
+											ProceedPrimaryResults(results);
+										}
+									}
+								}
+								else
                                 {
                                     ProceedPrimaryResults(results);
                                 }
@@ -249,6 +318,8 @@ namespace FamilIntegrationService
 
 			Logger.LogInfo("Finished", _tableName);
 		}
+
+		
 
 		//public void ExecutePrimary()
 		//{
@@ -308,11 +379,7 @@ namespace FamilIntegrationService
 
 		protected virtual string GetProcessingPackBody(List<BaseIntegrationObject> pack) { return String.Empty; }
 
-		protected RequestResult SendToProcessingPrimary(List<BaseIntegrationObject> pack)
-		{
-			var processingIntegrationProvider = new ProcessingIntegrationProvider();
-			return processingIntegrationProvider.Request(_processingPrimaryMethodName, GetProcessingPackBody(pack));
-		}
+		
 
         protected string GetCustomFieldsValue(BaseIntegrationObject o, string field)
         {

@@ -15,9 +15,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using ProcessingIntegrationService.Managers;
 
-namespace ProcessingIntegrationService
+namespace PersonalAreaIntegrationService
 {
 	public class Startup
 	{
@@ -40,9 +39,9 @@ namespace ProcessingIntegrationService
 				options.SaveToken = true;
 				options.TokenValidationParameters = new TokenValidationParameters
 				{
-					ValidIssuer = "FamilIntegrationService",
-					ValidAudience = "IntegrationUser",
-					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("gfdiog40-]kgf-043uo")),
+					ValidIssuer = "FamilPAIntegrationService",
+					ValidAudience = "PAIntegrationUser",
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("nr490jf390353hj9")),
 					ValidateLifetime = true,
 					ValidateIssuerSigningKey = true,
 					ClockSkew = TimeSpan.Zero
@@ -50,14 +49,7 @@ namespace ProcessingIntegrationService
 			}); ;
 
 			services.AddMemoryCache();
-			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingUri, Configuration.GetValue<string>("ProcessingUri"));
-            GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ProcessingSecret, Configuration.GetValue<string>("ProcessingSecret"));
-            GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ConnectionString, Configuration.GetValue<string>("ConnectionString"));
-			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMLogin, Configuration.GetSection("BPMCredentials").GetValue<string>("login"));
-			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMPassword, Configuration.GetSection("BPMCredentials").GetValue<string>("password"));
-			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMUri, Configuration.GetSection("BPMCredentials").GetValue<string>("uri"));
-
-			ProductManager.CreateTableIfNotExists();
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.ConnectionString, Configuration.GetValue<string>("ConnectionString"));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

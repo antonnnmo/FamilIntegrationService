@@ -9,6 +9,7 @@ using FamilIntegrationService;
 using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Npgsql;
 
 namespace ProcessingIntegrationService.Controllers
 {
@@ -46,36 +47,40 @@ namespace ProcessingIntegrationService.Controllers
 
 				if (responseObj.Success)
 				{
-					var productCodes = new CalcProductRetailPriceRequest() { ProductCodes = request.Products.Select(p => p.ProductCode).ToList() };
-					var result = new CRMIntegrationProvider().MakeRequest("MiddlewareProcessingService/CalcProductRetailPrice", String.Format(@"{{""request"": {0}}}", JsonConvert.SerializeObject(productCodes)));
-					if (result.IsSuccess)
+					var price = 0m;
+					using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 					{
-						var price = ((CalcProductRetailPriceResponse)JsonConvert.DeserializeObject(result.ResponseStr, typeof(CalcProductRetailPriceResponse))).CalcProductRetailPriceResult;
-						var diff = Convert.ToInt32(price - request.Amount);
-						responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
+						conn.Open();
 
-						var now = DateTime.UtcNow;
-                        responseObj.BenefitFirst = String.Empty;
-                        responseObj.BenefitSecond = String.Empty;
-
-						var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-						if (prefixTemplate != null)
+						// Insert some data
+						using (var cmd = new NpgsqlCommand())
 						{
-							responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
-						}
-
-						var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-						if (suffixTemplate != null)
-						{
-							responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+							cmd.Connection = conn;
+							cmd.CommandText = String.Format(@"SELECT SUM(""Price"") FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
+							price = (decimal)cmd.ExecuteScalar();
 						}
 					}
-					return Ok(responseObj);
+
+					var diff = Convert.ToInt32(price - request.Amount);
+					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
+
+					var now = DateTime.UtcNow;
+                    responseObj.BenefitFirst = String.Empty;
+                    responseObj.BenefitSecond = String.Empty;
+
+					var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+					if (prefixTemplate != null)
+					{
+						responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
+					}
+
+					var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+					if (suffixTemplate != null)
+					{
+						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+					}
 				}
-				else
-				{
-					return BadRequest(responseObj);
-				}
+				return Ok(responseObj);
 			}
 			else
 			{

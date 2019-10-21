@@ -244,7 +244,7 @@ namespace FamilIntegrationService
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
 				}
 			}*/
-            var processingIntegrationProvider = new ProcessingIntegrationProvider();
+            var processingIntegrationProvider = new ProcessingIntegrationProvider(false);
             return processingIntegrationProvider.RequestMethod("purchase/confirm", body);
         }
 

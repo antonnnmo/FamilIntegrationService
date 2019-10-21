@@ -31,6 +31,7 @@ namespace FamilIntegrationService
 		{
 			_tableName = "ShopGate";
 			_isNeedSendToProcessing = true;
+			_isNeedSendToPersonalArea = true;
 			_processingPrimaryMethodName = "LoadPrimaryShopPack";
 			_processingMethodName = "LoadShopPack";
 		}

@@ -47,6 +47,7 @@ namespace FamilIntegrationService
 			_processingPrimaryMethodName = "LoadPrimaryContactPack";
 			_processingMethodName = "LoadContactPack";
 			_isNeedSendToProcessing = true;
+			_isNeedSendToPersonalArea = true;
 		}
 
 		protected override List<BaseIntegrationObject> ReadPack() {
@@ -102,7 +103,27 @@ namespace FamilIntegrationService
 
 		protected override string GetProcessingPackBody(List<BaseIntegrationObject> pack)
 		{
-			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel() { ERPId = c.ERPId, Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id, Name = GetContactName(c.Surname, c.FirstName, c.MiddleName), Phone = c.Phone });
+			var contacts = pack.Select(c => (Contact)c).Select(c => new ContactProcessingModel()
+			{
+				ERPId = c.ERPId,
+				Id = GetCustomFieldsGuidValue(c, "ObjectId") ?? c.Id,
+				Name = GetContactName(c.Surname, c.FirstName, c.MiddleName),
+				Phone = c.Phone,
+				Address = c.Address,
+				Birthday = c.BirthDay,
+				City = c.City,
+				Country = c.Country,
+				Email = c.Email,
+				FirstName = c.FirstName,
+				Gender = c.IsMan ? "1" : "0",
+				MiddleName = c.MiddleName,
+				PersDataProcAgreement = c.PersDataProcAgreement.ToString(),
+				RegistrationDate = c.RegistrationDate,
+				RequiresCorrection = c.RequiresCorrection.ToString(),
+				ShopCode = c.ShopCode,
+				Surname = c.Surname,
+				ThereAreEmptyFields = c.ThereAreEmptyFields
+			});
 			return JsonConvert.SerializeObject(contacts);
 		}
 

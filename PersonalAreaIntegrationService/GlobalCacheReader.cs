@@ -14,30 +14,15 @@ namespace FamilIntegrationService.Providers
 
 		public static class CacheKeys
 		{
-			public static string SqlConnectionString { get { return "SqlConnectionString"; } }
-			public static string CRMSqlConnectionString { get { return "CRMSqlConnectionString"; } }
 			public static string BPMCookie { get { return "BPMCookie"; } }
 			public static string BPMLogin { get { return "BPMLogin"; } }
 			public static string BPMPassword { get { return "BPMPassword"; } }
 			public static string BPMUri { get { return "BPMUri"; } }
 			public static string BPMCSRF { get { return "BPMCSRF"; } }
 			public static string ProcessingUri { get { return "ProcessingUri"; } }
-			public static string ProcessingLogin { get { return "ProcessingLogin"; } }
-			public static string ProcessingPasword { get { return "ProcessingPasword"; } }
-			public static string ProcessingToken { get { return "ProcessingToken"; } }
-			public static string PersonalAreaUri { get { return "PersonalAreaUri"; } }
-			public static string PersonalAreaLogin { get { return "PersonalAreaLogin"; } }
-			public static string PersonalAreaPasword { get { return "PersonalAreaPasword"; } }
-			public static string PersonalAreaToken { get { return "PersonalAreaToken"; } }
-			public static string PackSize { get { return "PackSize"; } }
-            public static string ThreadCount { get { return "ThreadCount"; } }
-            public static string CrmRequestTimeout { get { return "CrmRequestTimeout"; } }
+			public static string ConnectionString { get { return "ConnectionString"; } }
+            public static string ProcessingSecret { get { return "ProcessingSecret"; } }
         }
-
-		internal static void GetValue(object processingLogin, out string login)
-		{
-			throw new NotImplementedException();
-		}
 
 		public static bool GetValue<T>(string key, out T value)
 		{

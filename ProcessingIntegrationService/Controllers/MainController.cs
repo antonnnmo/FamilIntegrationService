@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using ProcessingIntegrationService.Managers;
+using ProcessingIntegrationService.Models;
 
 namespace ProcessingIntegrationService.Controllers
 {
@@ -25,6 +26,18 @@ namespace ProcessingIntegrationService.Controllers
 			if (templates != null)
 			{
 				AnswerTemplateCollection.SaveToDB(templates);
+				return Ok(new { Result = "success" });
+			}
+
+			return BadRequest(new { Result = "parameter errors" });
+		}
+
+		[HttpPost("SendProductPrice")]
+		public ActionResult SendProductPrice([FromBody]SendProductPriceRequest request)
+		{
+			if (request != null)
+			{
+				new ProductManager().ChangeProductPrice(request);
 				return Ok(new { Result = "success" });
 			}
 

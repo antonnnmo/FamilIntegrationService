@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationService", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessingIntegrationService", "ProcessingIntegrationService\ProcessingIntegrationService.csproj", "{5A535D91-339A-4390-9C51-709A10250A84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProcessingIntegrationService", "ProcessingIntegrationService\ProcessingIntegrationService.csproj", "{5A535D91-339A-4390-9C51-709A10250A84}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilIntegrationCore", "FamilIntegrationCore\FamilIntegrationCore.csproj", "{837603A7-C938-40A2-BE51-D3715277CFBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationCore", "FamilIntegrationCore\FamilIntegrationCore.csproj", "{837603A7-C938-40A2-BE51-D3715277CFBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAreaIntegrationService", "PersonalAreaIntegrationService\PersonalAreaIntegrationService.csproj", "{C10B3592-240F-4B78-8152-A0EFB6FEE416}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{837603A7-C938-40A2-BE51-D3715277CFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{837603A7-C938-40A2-BE51-D3715277CFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{837603A7-C938-40A2-BE51-D3715277CFBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

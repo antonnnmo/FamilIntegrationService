@@ -15,16 +15,34 @@ namespace FamilIntegrationService.Providers
 		private string _password;
 		private string _uri;
 		private string _token;
+		private string _tokenCacheName;
 		//private CookieContainer _bpmCookieContainer;
 		//private string _csrf;
 		//private bool _useLocalCookie;
 
-		public ProcessingIntegrationProvider()
+		public ProcessingIntegrationProvider(bool isPA)
 		{
-			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingUri, out _uri);
-			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingLogin, out _login);
-			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingPasword, out _password);
-			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingToken, out _token);
+			if (isPA)
+			{
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.PersonalAreaUri, out _uri);
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.PersonalAreaLogin, out _login);
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.PersonalAreaPasword, out _password);
+				_tokenCacheName = GlobalCacheReader.CacheKeys.PersonalAreaToken;
+				GlobalCacheReader.GetValue(_tokenCacheName, out _token);
+			}
+			else
+			{
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingUri, out _uri);
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingLogin, out _login);
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingPasword, out _password);
+				_tokenCacheName = GlobalCacheReader.CacheKeys.ProcessingToken;
+				GlobalCacheReader.GetValue(_tokenCacheName, out _token);
+			}
+
+			if (String.IsNullOrEmpty(_token))
+			{
+				Authorize();
+			}
 		}
 
 		public bool Authorize()
@@ -57,7 +75,7 @@ namespace FamilIntegrationService.Providers
 						using (var streamReader = new StreamReader(responseStream))
 						{
 							_token = streamReader.ReadToEnd().Replace("\"", "");
-							GlobalCacheReader.SetValue(GlobalCacheReader.CacheKeys.ProcessingToken, _token);
+							GlobalCacheReader.SetValue(_tokenCacheName, _token);
 							return true;
 						}
 					}
