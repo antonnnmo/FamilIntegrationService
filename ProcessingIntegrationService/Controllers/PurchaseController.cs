@@ -31,8 +31,9 @@ namespace ProcessingIntegrationService.Controllers
 		[HttpPost("confirm")]
 		public ActionResult Confirm([FromBody]PurchaseConfirmRequest request)
 		{
+			Logger.LogInfo("started processing request", "");
 			var res = PRRequest(request.ToJson());
-
+			Logger.LogInfo("done processing request", "");
 			if (res.IsSuccess)
 			{
 				var responseObj = ConfirmResponse.FromJson(res.ResponseStr);
@@ -57,7 +58,9 @@ namespace ProcessingIntegrationService.Controllers
 						{
 							cmd.Connection = conn;
 							cmd.CommandText = String.Format(@"SELECT SUM(""Price"") FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
-							price = (decimal)cmd.ExecuteScalar();
+							var obj = cmd.ExecuteScalar();
+
+							price = obj is DBNull ? 0m :(decimal)obj;
 						}
 					}
 
@@ -80,6 +83,7 @@ namespace ProcessingIntegrationService.Controllers
 						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
 					}
 				}
+				Logger.LogInfo("return ok response", "");
 				return Ok(responseObj);
 			}
 			else
