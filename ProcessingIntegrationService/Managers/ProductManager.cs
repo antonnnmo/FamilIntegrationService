@@ -1,4 +1,5 @@
 ﻿using FamilIntegrationCore.Models;
+using FamilIntegrationService;
 using Npgsql;
 using ProcessingIntegrationService.Models;
 using System;
@@ -19,10 +20,14 @@ namespace ProcessingIntegrationService.Managers
 
             sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}', '{2}')", (c.Name ?? "").Replace("'", "''"), (c.Code ?? "").Replace("'", "''"), c.Id))));
 
+			sb.Append(";");
 			sb.AppendLine(@"INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ");
 
 			sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"({0}, '{1}')", c.Price.ToString().Replace(",", "."), (c.Code ?? "").Replace("'", "''")))));
-			return sb.ToString();
+			var res = sb.ToString();
+			Logger.LogInfo("запрос на добавление продукта", res);
+
+			return res;
         }
 
         protected override string GetQuery(BaseProcessingModel model)

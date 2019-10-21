@@ -48,7 +48,7 @@ namespace ProcessingIntegrationService.Controllers
 
 				if (responseObj.Success)
 				{
-					var price = 0m;
+					var price = 0d;
 					using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 					{
 						conn.Open();
@@ -60,11 +60,11 @@ namespace ProcessingIntegrationService.Controllers
 							cmd.CommandText = String.Format(@"SELECT SUM(""Price"") FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
 							var obj = cmd.ExecuteScalar();
 
-							price = obj is DBNull ? 0m :(decimal)obj;
+							price = obj is DBNull ? 0d :(double)obj;
 						}
 					}
 
-					var diff = Convert.ToInt32(price - request.Amount);
+					var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
 					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
 
 					var now = DateTime.UtcNow;
