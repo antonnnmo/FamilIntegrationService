@@ -43,6 +43,17 @@ namespace ProcessingIntegrationService.Controllers
 
 			return BadRequest(new { Result = "parameter errors" });
 		}
+		[HttpPost("SendPromocodePool")]
+		public ActionResult SendPromocodePool([FromBody]SendPromocodePoolRequest request)
+		{
+			if (request != null)
+			{
+				Promocode.ChangePool(request);
+				return Ok(new { Result = "success" });
+			}
+
+			return BadRequest(new { Result = "parameter errors" });
+		}
 
 		[HttpPost("LoadContactPack")]
 		[Authorize]

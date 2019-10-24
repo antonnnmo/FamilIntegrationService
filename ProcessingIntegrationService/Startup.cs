@@ -58,6 +58,7 @@ namespace ProcessingIntegrationService
 			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.BPMUri, Configuration.GetSection("BPMCredentials").GetValue<string>("uri"));
 
 			ProductManager.CreateTableIfNotExists();
+			Promocode.CreateTableIfNotExists();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

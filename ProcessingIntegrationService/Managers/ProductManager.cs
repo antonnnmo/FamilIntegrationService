@@ -59,13 +59,12 @@ namespace ProcessingIntegrationService.Managers
 				@"   
                 do $$ begin
 				if (select 1 from ""ProductPrice"" where ""Code""='{0}') then
-                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {1} WHERE ""Code"" = '{1}';
+                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {1} WHERE ""Code"" = '{0}';
                 ELSE
                     INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{1}', '{0}');
                 END IF;
                 END $$",
 				(request.Code ?? "").Replace("'", "''"), request.Price.ToString().Replace(",", "."));
-
 				new NpgsqlCommand(query, conn).ExecuteNonQuery();
 			}
 		}

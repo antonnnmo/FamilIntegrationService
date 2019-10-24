@@ -28,12 +28,25 @@ namespace ProcessingIntegrationService
 		[JsonProperty("client")]
 		public ResponseClient Client { get; set; }
 
+		[JsonProperty("activePromocodes")]
+		public List<ActivePromocode> ActivePromocodes { get; set; }
+
 		public static ConfirmResponse FromJson(string json) => JsonConvert.DeserializeObject<ConfirmResponse>(json, ConfirmResponseConverter.Settings);
 
 		public string ToJson()
 		{
 			return JsonConvert.SerializeObject(this, ConfirmResponseConverter.Settings);
 		}
+	}
+
+	public class ActivePromocode
+	{
+		[JsonProperty("name")]
+		public string Name { get; set; }
+		[JsonProperty("description")]
+		public string Description { get; set; }
+		[JsonProperty("pool")]
+		public string Pool { get; set; }
 	}
 
 	public class ResponseClient

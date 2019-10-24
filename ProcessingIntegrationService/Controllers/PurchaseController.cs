@@ -10,6 +10,8 @@ using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Npgsql;
+using ProcessingIntegrationService.Managers;
+using ProcessingIntegrationService.Models;
 
 namespace ProcessingIntegrationService.Controllers
 {
@@ -28,11 +30,34 @@ namespace ProcessingIntegrationService.Controllers
             GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ProcessingSecret, out _processingSecret);
         }
 
+		[HttpPost("calculate")]
+		public ActionResult Calculate([FromBody]PurchaseCalculateRequest request)
+		{
+			Logger.LogInfo("started processing request", "");
+			var res = PRRequest("calculate", request.ToJson());
+			Logger.LogInfo("done processing request", "");
+			if (res.IsSuccess)
+			{
+				var responseObj = PurchaseCalculateResponse.FromJson(res.ResponseStr);
+
+				if (responseObj.Success)
+				{
+					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone);
+				}
+
+				return Ok(responseObj);
+			}
+			else
+			{
+				return BadRequest(res.ResponseStr);
+			}
+		}
+
 		[HttpPost("confirm")]
 		public ActionResult Confirm([FromBody]PurchaseConfirmRequest request)
 		{
 			Logger.LogInfo("started processing request", "");
-			var res = PRRequest(request.ToJson());
+			var res = PRRequest("confirm", request.ToJson());
 			Logger.LogInfo("done processing request", "");
 			if (res.IsSuccess)
 			{
@@ -49,6 +74,7 @@ namespace ProcessingIntegrationService.Controllers
 				if (responseObj.Success)
 				{
 					var price = 0d;
+					var prices = new Dictionary<string, double>();
 					using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 					{
 						conn.Open();
@@ -57,12 +83,19 @@ namespace ProcessingIntegrationService.Controllers
 						using (var cmd = new NpgsqlCommand())
 						{
 							cmd.Connection = conn;
-							cmd.CommandText = String.Format(@"SELECT SUM(""Price"") FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
-							var obj = cmd.ExecuteScalar();
+							cmd.CommandText = String.Format(@"SELECT ""Price"", ""Code"" FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
 
-							price = obj is DBNull ? 0d :(double)obj;
+							using (var reader = cmd.ExecuteReader())
+							{
+								while (reader.Read())
+								{
+									prices.Add(reader.GetString(1), reader.GetDouble(0));
+								}
+							}
 						}
 					}
+
+					price = prices.Sum(p => p.Value*Convert.ToDouble(request.Products.FirstOrDefault(pr => pr.ProductCode == p.Key).Quantity));
 
 					var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
 					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
@@ -82,6 +115,8 @@ namespace ProcessingIntegrationService.Controllers
 					{
 						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
 					}
+
+					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone, request.Client.CardNumber);
 				}
 				Logger.LogInfo("return ok response", "");
 				return Ok(responseObj);
@@ -115,9 +150,9 @@ namespace ProcessingIntegrationService.Controllers
 
 		}
 
-		private RequestResult PRRequest(string body)
+		private RequestResult PRRequest(string method, string body)
 		{
-            var req = (HttpWebRequest)WebRequest.Create(string.Format("{0}/purchase/confirm", _processingUrl));
+            var req = (HttpWebRequest)WebRequest.Create(string.Format("{0}/purchase/{1}", _processingUrl, method));
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
