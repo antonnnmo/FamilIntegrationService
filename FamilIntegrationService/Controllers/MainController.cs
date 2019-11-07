@@ -260,6 +260,30 @@ namespace FamilIntegrationService.Controllers
 			return Ok();
 		}
 
+		[HttpGet("StartAll")]
+		public ActionResult StartAll()
+		{
+			new Task(() => 
+			{
+				new CityManager().Execute();
+				new ProductSizeManager().Execute();
+				new ProductCategoryManager().Execute();
+				new BrandTypeManager().Execute();
+				new BrandManager().Execute();
+				new ProductSubCategoryManager().Execute();
+				new ShopManager().Execute();
+				new ProductGroupManager().Execute();
+				new ContactManager().Execute();
+				new ContactTagManager().Execute();
+				new CardManager().Execute();
+				new ProductManager().Execute();
+				new ProductTagManager().Execute();
+				new PurchaseManager().Execute();
+			}).Start();
+
+			return Ok();
+		}
+
 		[HttpGet("Test")]
 		public ActionResult Test()
 		{
@@ -274,12 +298,12 @@ namespace FamilIntegrationService.Controllers
 			{
 				DBConnectionProvider.ExecuteNonQuery(
                     string.Format(
-                        @"IF NOT EXISTS(select top 1 1 from ContactGate where ERPId = '{0}' and source = 1)
+						@"IF NOT EXISTS(select top 1 1 from ContactBalanceGate where ERPId = '{0}')
                         BEGIN
-                            Insert into ContactGate(ERPId, createdOn, bonusBalance, source) VALUES('{0}', GETUTCDATE(), {1}, 1)
+                            Insert into ContactBalanceGate(ERPId, uploadedOn, bonusBalance) VALUES('{0}', GETUTCDATE(), {1})
                         END
                         ELSE BEGIN
-                            update ContactGate set bonusBalance = {1} where ERPId = '{0}' and source = 1 
+                            update ContactBalanceGate set bonusBalance = {1}, uploadedOn = GETUTCDATE() where ERPId = '{0}'
                         END
                         ", 
                     balance.ERPId, balance.Balance.ToString().Replace(",", ".")));

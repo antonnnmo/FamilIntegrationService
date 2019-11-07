@@ -22,6 +22,7 @@ namespace FamilIntegrationService.Providers
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMPassword, out _password);
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMUri, out _uri);
             GlobalCacheReader.GetValue<int>(GlobalCacheReader.CacheKeys.CrmRequestTimeout, out _timeout);
+			Authorize();
         }
 
 		//public void SendSaleToCRM(Guid saleId, bool isNeedCreateProject = false)
@@ -36,39 +37,38 @@ namespace FamilIntegrationService.Providers
 
 		public RequestResult MakeRequest(string bpmServiceUri, string body)
 		{
-			HttpWebRequest req;
-			CookieContainer bpmCookieContainer = null;
+			return Request(bpmServiceUri, body);
+		}
 
+		private void CheckAndAuth(out CookieContainer bpmCookieContainer)
+		{
+			HttpWebRequest req;
+			bpmCookieContainer = null;
 			if (_useLocalCookie)
 			{
 				if (_bpmCookieContainer == null)
 				{
-					_csrf = Authorize(out req, out _bpmCookieContainer);
-					bpmCookieContainer = _bpmCookieContainer;
+					Authorize();
 				}
 			}
 			else
 			{
 				if (!GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMCookie, out bpmCookieContainer))
 				{
-					var csrf = Authorize(out req, out bpmCookieContainer);
-                    GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCookie, bpmCookieContainer, TimeSpan.FromMinutes(20));
-					GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCSRF, csrf, TimeSpan.FromMinutes(20));
+					Authorize();
 				}
 			}
-
-			return Request(bpmServiceUri, body, out req, bpmCookieContainer);			
 		}
 
-		private string Authorize(out HttpWebRequest req, out CookieContainer bpmCookieContainer)
+		private string Authorize()
 		{
             //Вызов сервиса с авторизацией    
-            req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/ServiceModel/AuthService.svc/Login", _uri));
+            var req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/ServiceModel/AuthService.svc/Login", _uri));
 
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
-			bpmCookieContainer = new CookieContainer();
+			var bpmCookieContainer = new CookieContainer();
 			req.CookieContainer = bpmCookieContainer;
 
 			req.Credentials =
@@ -90,6 +90,17 @@ namespace FamilIntegrationService.Providers
 			var cookies = bpmCookieContainer.GetCookies(new Uri(_uri));
 			try
 			{
+				if (_useLocalCookie)
+				{
+					_bpmCookieContainer = bpmCookieContainer;
+					_csrf = cookies["BPMCSRF"].Value;
+				}
+				else
+				{
+					GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCookie, bpmCookieContainer, TimeSpan.FromMinutes(20));
+					GlobalCacheReader.SetTemporaryValue(GlobalCacheReader.CacheKeys.BPMCSRF, cookies["BPMCSRF"].Value, TimeSpan.FromMinutes(20));
+				}
+
 				return cookies["BPMCSRF"].Value;
 			}
 			catch
@@ -98,9 +109,19 @@ namespace FamilIntegrationService.Providers
 			}
 		}
 
-		private RequestResult Request(string bpmServiceUri, string body, out HttpWebRequest req, CookieContainer bpmCookieContainer)
+		private RequestResult Request(string bpmServiceUri, string body, bool isRepeatOnNonAuth = true)
 		{
-            req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/0/rest/{1}", _uri, bpmServiceUri));
+			CookieContainer bpmCookieContainer;
+			if (_useLocalCookie)
+			{
+				bpmCookieContainer = _bpmCookieContainer;
+			}
+			else
+			{
+				GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.BPMCookie, out bpmCookieContainer);
+			}
+
+			var req = (HttpWebRequest)WebRequest.Create(String.Format("{0}/0/rest/{1}", _uri, bpmServiceUri));
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
@@ -144,9 +165,14 @@ namespace FamilIntegrationService.Providers
 			}
 			catch (WebException e)
 			{
-                if (e.Response == null)
+				if (e.Response == null)
 				{
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " null response" };
+				}
+				else if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized && isRepeatOnNonAuth)
+				{
+					Authorize();
+					return Request(bpmServiceUri, body, false);
 				}
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{

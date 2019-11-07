@@ -13,6 +13,12 @@ namespace PersonalAreaIntegrationService.Controllers
 	[ApiController]
 	public class MainController : ControllerBase
 	{
+		[HttpGet]
+		public ActionResult Get()
+		{
+			return Ok("ok");
+		}
+
 		[HttpPost("LoadContactPack")]
 		//[Authorize]
 		public ActionResult LoadContactPack([FromBody]IEnumerable<ContactProcessingModel> contacts)

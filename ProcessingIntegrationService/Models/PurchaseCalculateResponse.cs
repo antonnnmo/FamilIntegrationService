@@ -18,6 +18,15 @@ namespace ProcessingIntegrationService.Models
 		[JsonProperty("activePromocodes")]
 		public List<ActivePromocode> ActivePromocodes { get; set; }
 
+		[JsonProperty("benefitAmount")]
+		public string BenefitAmount { get; set; }
+
+		[JsonProperty("benefitSecond")]
+		public string BenefitSecond { get; set; }
+
+		[JsonProperty("benefitFirst")]
+		public string BenefitFirst { get; set; }
+
 		[JsonProperty("success")]
 		public bool Success { get; set; }
 

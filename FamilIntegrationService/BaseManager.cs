@@ -52,42 +52,37 @@ namespace FamilIntegrationService
                     {
                         Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
                     }
-                    
-                    while (pack.Count > 0)
+
+					var crm = new CRMIntegrationProvider(true);
+
+					while (pack.Count > 0)
 					{
                         var now = DateTime.Now;
 
-                        var crm = new CRMIntegrationProvider(true);
 						var res = crm.MakeRequest("GateIntegrationService/IntegratePack", GetBody(pack));
 
                         Logger.LogInfo(string.Format("Запрос {0} к CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                         if (!res.IsSuccess)
 						{
-							Logger.LogInfo("1", "1");
 							ProceedResult(new PackResult() { IsSuccess = false, ErrorMessage = res.ResponseStr }, pack);
 						}
 						else
 						{
-							Logger.LogInfo("2", "1");
 							var results = JsonConvert.DeserializeObject<PackResults>(res.ResponseStr);
 
 							var successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
 							var unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
-							Logger.LogInfo("2", "2");
 							ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
-							Logger.LogInfo("2", "3");
 
 							foreach (var r in successResults)
 							{
 								var p = pack.FirstOrDefault(x => x.ERPId == r.Id);
 								if (p != null && r.CustomFields != null) p.CustomFields = r.CustomFields;
 							}
-							Logger.LogInfo("2", "4");
 
 							if (_isNeedSendToProcessing)
 							{
-								Logger.LogInfo("2", "45");
 								var isProcessingSuccess = false;
 								try
 								{
@@ -95,21 +90,17 @@ namespace FamilIntegrationService
 								}
 								catch (Exception e)
 								{
-									Logger.LogError("32", e);
+									Logger.LogError("SendToProcessing error ", e);
 								}
-								Logger.LogInfo("2", "5");
 
 								successResults = results.IntegratePackResult.Where(r => r.IsSuccess);
 								unsuccessResults = results.IntegratePackResult.Where(r => !r.IsSuccess);
 
 								ProceedResults(new PackResults() { IntegratePackResult = unsuccessResults.ToList() });
-								Logger.LogInfo("2", "6");
 
 								if (_isNeedSendToPersonalArea)
 								{
 									var isPersonalAreaSuccess = SendToProcessing(pack, out now, out results, successResults, true);
-
-									Logger.LogInfo("2", "7");
 
 									if (isPersonalAreaSuccess)
 									{
@@ -235,9 +226,11 @@ namespace FamilIntegrationService
                     {
                         Logger.LogError(string.Format("Ошибка чтения данных из {0}", _tableName), e);
                     }
-                    while (pack.Count > 0)
+
+					var crm = new CRMIntegrationProvider(true);
+
+					while (pack.Count > 0)
 					{
-						var crm = new CRMIntegrationProvider(true);
 						RequestResult res = null;
 						try
 						{

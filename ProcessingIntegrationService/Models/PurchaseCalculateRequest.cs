@@ -23,7 +23,7 @@ namespace ProcessingIntegrationService.Models
 		public Product[] Products { get; set; }
 
 		[JsonProperty("bonusAmountToPay")]
-		public long BonusAmountToPay { get; set; }
+		public string BonusAmountToPay { get; set; }
 
 		[JsonProperty("promoCodes")]
 		public string[] PromoCodes { get; set; }

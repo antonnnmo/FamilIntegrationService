@@ -42,7 +42,53 @@ namespace ProcessingIntegrationService.Controllers
 
 				if (responseObj.Success)
 				{
+					var price = 0d;
+					var prices = new Dictionary<string, double>();
+					using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
+					{
+						conn.Open();
+
+						// Insert some data
+						using (var cmd = new NpgsqlCommand())
+						{
+							cmd.Connection = conn;
+							cmd.CommandText = String.Format(@"SELECT ""Price"", ""Code"" FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", request.Products.Select(p => String.Format("'{0}'", p.ProductCode))));
+
+							using (var reader = cmd.ExecuteReader())
+							{
+								while (reader.Read())
+								{
+									prices.Add(reader.GetString(1), reader.GetDouble(0));
+								}
+							}
+						}
+					}
+
+					price = prices.Sum(p => p.Value * Convert.ToDouble(request.Products.FirstOrDefault(pr => pr.ProductCode == p.Key).Quantity));
+
+					var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
+					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
+
+					var now = DateTime.UtcNow;
+					responseObj.BenefitFirst = String.Empty;
+					responseObj.BenefitSecond = String.Empty;
+
+					var rand = new Random();
+					var prefixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+					if (prefixTemplate != null)
+					{
+						responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
+					}
+
+					var suffixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+					if (suffixTemplate != null)
+					{
+						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+					}
+
+					
 					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone);
+					
 				}
 
 				return Ok(responseObj);

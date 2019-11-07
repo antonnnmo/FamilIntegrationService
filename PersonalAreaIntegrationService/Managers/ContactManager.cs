@@ -15,7 +15,7 @@ namespace ProcessingIntegrationService.Managers
 		{
 			var contacts = models.Select(m => (ContactProcessingModel)m);
 			var sb = new StringBuilder();
-			sb.AppendLine(@"INSERT INTO ""public"".""Contact"" (""Name"", ""Phone"", ""Id"", ""BrandId"", 
+			sb.AppendLine(@"INSERT INTO ""public"".""Contact"" (""Name_FirstName"", ""Phone"", ""Id"", ""BrandId"", 
 						""Name_Surname"", 
 						""Name_MiddleName"", 
 						""Email"",
@@ -37,7 +37,7 @@ namespace ProcessingIntegrationService.Managers
 				(c.Surname ?? String.Empty).Replace("'", "''"),
 				(c.MiddleName ?? String.Empty).Replace("'", "''"),
 				(c.Email ?? String.Empty).Replace("'", "''"),
-				(c.Gender ?? String.Empty).Replace("'", "''"),
+				c.Gender == "1" ? "0" : "1",
 				(c.Country ?? String.Empty).Replace("'", "''"),
 				(c.City ?? String.Empty).Replace("'", "''"),
 				(c.Address ?? String.Empty).Replace("'", "''"),
@@ -107,7 +107,7 @@ namespace ProcessingIntegrationService.Managers
 				(contact.Surname ?? String.Empty).Replace("'", "''"),
 				(contact.MiddleName ?? String.Empty).Replace("'", "''"),
 				(contact.Email ?? String.Empty).Replace("'", "''"),
-				(contact.Gender ?? String.Empty).Replace("'", "''"),
+				contact.Gender == "1" ? "0" : "1",
 				(contact.Country ?? String.Empty).Replace("'", "''"),
 				(contact.City ?? String.Empty).Replace("'", "''"),
 				(contact.Address ?? String.Empty).Replace("'", "''"),

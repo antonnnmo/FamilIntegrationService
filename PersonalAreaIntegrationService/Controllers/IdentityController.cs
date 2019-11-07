@@ -48,7 +48,7 @@ namespace ProcessingIntegrationService.Controllers
 
 		private bool ValidateUser(IdentityViewModel request)
 		{
-            //CreateTableIfNotExists();
+            CreateTableIfNotExists();
             var passwordHash = GetPasswordHash(request.Password);
 			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
