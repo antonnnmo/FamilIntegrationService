@@ -126,6 +126,7 @@ namespace FamilIntegrationService.Providers
 			{
 				if (e.Response == null)
 				{
+					Logger.LogError(method, e);
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
 				}
 
@@ -140,6 +141,7 @@ namespace FamilIntegrationService.Providers
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{
 					var res = streamReader.ReadToEnd();
+					Logger.LogError($"{method} {res}", e);
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
 				}
 			}
@@ -186,7 +188,8 @@ namespace FamilIntegrationService.Providers
             {
                 if (e.Response == null)
                 {
-                    return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
+					Logger.LogError($"{method}", e);
+					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
                 }
 
                 if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized)
@@ -200,7 +203,8 @@ namespace FamilIntegrationService.Providers
                 using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
                 {
                     var res = streamReader.ReadToEnd();
-                    return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
+					Logger.LogError($"{method} {res}", e);
+					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
                 }
             }
             catch (Exception e)

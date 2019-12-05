@@ -236,9 +236,12 @@ namespace FamilIntegrationService
 						{
                             var now = DateTime.Now;
 
-                            res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", GetBody(pack));
+							var body = GetBody(pack);
 
-                            Logger.LogInfo(string.Format("Запрос {0} к CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
+							res = crm.MakeRequest("GateIntegrationService/PrimaryIntegratePack", body);
+							//Logger.LogInfo(body, "");
+							//Logger.LogInfo(body, res.ResponseStr);
+						    Logger.LogInfo(string.Format("Запрос {0} к CRM выполнен за {1}с", _tableName, (DateTime.Now - now).TotalSeconds.ToString("F1")), "");
 
                             if (!res.IsSuccess)
 							{

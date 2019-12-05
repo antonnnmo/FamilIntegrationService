@@ -27,8 +27,21 @@ namespace ProcessingIntegrationService
 		[JsonProperty("payments")]
 		public Payment[] Payments { get; set; }
 
+		private string _paymentForm;
+
 		[JsonProperty("paymentForm")]
-		public string PaymentForm { get; set; }
+		public string PaymentForm
+		{
+			get
+			{
+				if (String.IsNullOrEmpty(_paymentForm)) return "Fullpayment";
+				else return _paymentForm;
+			}
+			set
+			{
+				_paymentForm = value;
+			}
+		}
 
 		[JsonProperty("isTesting")]
 		public bool IsTesting { get; set; }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FamilIntegrationService;
 using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -59,6 +60,7 @@ namespace ProcessingIntegrationService
 
 			ProductManager.CreateTableIfNotExists();
 			Promocode.CreateTableIfNotExists();
+			AnswerTemplateCollection.CreateTableIfNotExist();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

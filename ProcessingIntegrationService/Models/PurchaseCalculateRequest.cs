@@ -16,14 +16,13 @@ namespace ProcessingIntegrationService.Models
 		public DateTimeOffset Date { get; set; }
 
 		[JsonProperty("shopCode")]
-		[JsonConverter(typeof(ParseStringConverter))]
-		public long ShopCode { get; set; }
+		public string ShopCode { get; set; }
 
 		[JsonProperty("products")]
 		public Product[] Products { get; set; }
 
 		[JsonProperty("bonusAmountToPay")]
-		public string BonusAmountToPay { get; set; }
+		public double? BonusAmountToPay { get; set; }
 
 		[JsonProperty("promoCodes")]
 		public string[] PromoCodes { get; set; }
@@ -31,8 +30,21 @@ namespace ProcessingIntegrationService.Models
 		[JsonProperty("amount")]
 		public long Amount { get; set; }
 
+		private string _paymentForm;
+
 		[JsonProperty("paymentForm")]
-		public string PaymentForm { get; set; }
+		public string PaymentForm
+		{
+			get
+			{
+				if (String.IsNullOrEmpty(_paymentForm)) return "Fullpayment";
+				else return _paymentForm;
+			}
+			set
+			{
+				_paymentForm = value;
+			}
+		}
 
 		public static PurchaseCalculateRequest FromJson(string json) => JsonConvert.DeserializeObject<PurchaseCalculateRequest>(json, Converter.Settings);
 
@@ -46,6 +58,9 @@ namespace ProcessingIntegrationService.Models
 	{
 		[JsonProperty("mobilePhone")]
 		public string MobilePhone { get; set; }
+
+		[JsonProperty("cardNumber")]
+		public string CardNumber { get; set; }
 
 		[JsonProperty("brandCode")]
 		public string BrandCode { get; set; }

@@ -9,6 +9,43 @@ namespace FamilIntegrationService
 {
 	public static class AnswerTemplateCollection
 	{
+		static string _calculateResponseTemplatePrefix;
+		public static string CalculateResponseTemplatePrefix
+		{
+			get
+			{
+				if (String.IsNullOrEmpty(_calculateResponseTemplatePrefix))
+				{
+					LoadCalculateResponseTemplatePrefixFromDB();
+				}
+
+				return _calculateResponseTemplatePrefix;
+			}
+			set
+			{
+				_calculateResponseTemplatePrefix = value;
+				SaveCalculateResponseTemplatePrefixToDB();
+			}
+		}
+
+		private static void SaveCalculateResponseTemplatePrefixToDB()
+		{
+			using (var conn = new NpgsqlConnection(GetConnectionString()))
+			{
+				conn.Open();
+				using (var cmd = new NpgsqlCommand(String.Format(@"do $$ begin
+                if (select 1 from ""Settings"" where ""Code""='CalculateResponseTemplatePrefix') then
+                    UPDATE ""public"".""Settings"" SET ""Value"" = '{0}' WHERE ""Code""='CalculateResponseTemplatePrefix';
+                ELSE
+                    INSERT INTO ""public"".""Settings"" (""Value"", ""Code"") VALUES ('{0}', 'CalculateResponseTemplatePrefix');
+                END IF;
+                END $$", _calculateResponseTemplatePrefix), conn))
+				{
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+
 		static List<AnswerTemplate> _templates;
 		public static List<AnswerTemplate> Templates
 		{
@@ -53,10 +90,10 @@ namespace FamilIntegrationService
 
 		}
 
-        private static void CreateTableIfNotExist()
+        public static void CreateTableIfNotExist()
         {
             var command =
-            @"CREATE TABLE IF NOT EXISTS public.""AnswerTemplate""
+			@"CREATE TABLE IF NOT EXISTS public.""AnswerTemplate""
             (
                ""Id"" uuid PRIMARY KEY,
                ""PrefixText"" text,
@@ -67,6 +104,11 @@ namespace FamilIntegrationService
                ""Start"" timestamp without time zone,
                ""End"" timestamp without time zone,
                ""IsFirstTextBlock"" integer
+            );
+			CREATE TABLE IF NOT EXISTS public.""Settings""
+            (
+               ""Code"" text PRIMARY KEY,
+               ""Value"" text
             );";
             using (var conn = new NpgsqlConnection(GetConnectionString()))
             {
@@ -83,6 +125,20 @@ namespace FamilIntegrationService
 		private static string GetConnectionString() {
 			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.ConnectionString, out string connString);
 			return connString;
+		}
+
+		private static void LoadCalculateResponseTemplatePrefixFromDB()
+		{
+			using (var conn = new NpgsqlConnection(GetConnectionString()))
+			{
+				conn.Open();
+
+				// Retrieve all rows
+				using (var cmd = new NpgsqlCommand(@"SELECT ""Value"" FROM ""public"".""Settings"" Where ""Code"" = 'CalculateResponseTemplatePrefix'", conn))
+				{
+					_calculateResponseTemplatePrefix = cmd.ExecuteScalar()?.ToString() ?? String.Empty;
+				}
+			}
 		}
 
 		private static void LoadFromDB()

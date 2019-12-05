@@ -42,6 +42,40 @@ namespace ProcessingIntegrationService.Controllers
 
 				if (responseObj.Success)
 				{
+					if (responseObj.Data != null && responseObj.Data.ProductDiscounts != null)
+					{
+						var removedDiscounts = new List<Discount>();
+						var remainingDiscounts = new List<Discount>();
+						responseObj.Data.ProductDiscounts.ToList().ForEach(productDiscount => {
+							var promotionDiscounts = productDiscount.Discounts.Where(d => d.Type == "Promotion");
+
+							if (promotionDiscounts.Count() > 0)
+							{
+								var maxDiscount = promotionDiscounts.Aggregate((d1, d2) => d1.DiscountDiscount > d2.DiscountDiscount ? d1 : d2);
+
+								var removingDiscounts = productDiscount.Discounts.Where(d => d.Type == "Promotion" && d != maxDiscount);
+								if (removingDiscounts.Count() > 0)
+								{
+									removedDiscounts.AddRange(removingDiscounts);
+								}
+
+								var newDiscounts = productDiscount.Discounts.ToList();
+								newDiscounts.RemoveAll(d => d.Type == "Promotion" && d != maxDiscount);
+								remainingDiscounts.AddRange(newDiscounts);
+								productDiscount.Discounts = newDiscounts.ToArray();
+
+								productDiscount.Discount = productDiscount.Discounts.Sum(d => d.DiscountDiscount);
+							}
+						});
+
+						if (removedDiscounts.Count > 0)
+						{
+							var notExistingDiscounts = removedDiscounts.Where(d => remainingDiscounts.Count(d1 => d1.Promotion != null && d1.Promotion.Name == d.Promotion.Name) == 0);
+							responseObj.Data.ActivatedPromotions.RemoveAll(ap => notExistingDiscounts.Count(d => d.Promotion != null && d.Promotion.Name == ap.Name) > 0);
+						}
+					}
+
+
 					var price = 0d;
 					var prices = new Dictionary<string, double>();
 					using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
@@ -64,31 +98,40 @@ namespace ProcessingIntegrationService.Controllers
 						}
 					}
 
-					price = prices.Sum(p => p.Value * Convert.ToDouble(request.Products.FirstOrDefault(pr => pr.ProductCode == p.Key).Quantity));
-
-					var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
-					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
-
-					var now = DateTime.UtcNow;
-					responseObj.BenefitFirst = String.Empty;
-					responseObj.BenefitSecond = String.Empty;
-
-					var rand = new Random();
-					var prefixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (prefixTemplate != null)
+					if (prices.Count > 0)
 					{
-						responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
+						//price = prices.Sum(p => p.Value * Convert.ToDouble(request.Products.FirstOrDefault(pr => pr.ProductCode == p.Key).Quantity));
+						price = request.Products.Sum(p => Convert.ToDouble(p.Quantity) * prices.FirstOrDefault(pr => pr.Key == p.ProductCode).Value);
+
+						var discounts = 0;
+
+						if (responseObj.Data != null && responseObj.Data.ProductDiscounts != null)
+						{
+							discounts = Convert.ToInt32(responseObj.Data.ProductDiscounts.Sum(pd => pd.Discounts == null ? 0 : pd.Discounts.Sum(d => d.DiscountDiscount)));
+						}
+
+						var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount) + discounts);
+						responseObj.BenefitAmount = diff.ToString();
+
+						var now = DateTime.UtcNow;
+						responseObj.BenefitFirst = AnswerTemplateCollection.CalculateResponseTemplatePrefix;
+						responseObj.BenefitSecond = $"{GetDeclension(diff, "рубль", "рубля", "рублей")}. ";
+
+						var rand = new Random();
+						var prefixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (prefixTemplate != null)
+						{
+							responseObj.BenefitSecond += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
+						}
+
+						var suffixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (suffixTemplate != null)
+						{
+							responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+						}
 					}
 
-					var suffixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (suffixTemplate != null)
-					{
-						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
-					}
-
-					
-					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone);
-					
+					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone, request.Client.CardNumber);
 				}
 
 				return Ok(responseObj);
@@ -141,25 +184,28 @@ namespace ProcessingIntegrationService.Controllers
 						}
 					}
 
-					price = prices.Sum(p => p.Value*Convert.ToDouble(request.Products.FirstOrDefault(pr => pr.ProductCode == p.Key).Quantity));
-
-					var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
-					responseObj.BenefitAmount = $"{diff} {GetDeclension(diff, "рубль", "рубля", "рублей")}";
-
-					var now = DateTime.UtcNow;
-                    responseObj.BenefitFirst = String.Empty;
-                    responseObj.BenefitSecond = String.Empty;
-
-					var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (prefixTemplate != null)
+					if (prices.Count > 0)
 					{
-						responseObj.BenefitFirst += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff /prefixTemplate.Price : 0)} {prefixTemplate.SuffixText}";
-					}
+						price = request.Products.Sum(p => Convert.ToDouble(p.Quantity) * prices.FirstOrDefault(pr => pr.Key == p.ProductCode).Value);
 
-					var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (suffixTemplate != null)
-					{
-						responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+						var diff = Convert.ToInt32(price - Convert.ToDouble(request.Amount));
+						responseObj.BenefitAmount = diff.ToString();
+
+						var now = DateTime.UtcNow;
+						responseObj.BenefitFirst = AnswerTemplateCollection.CalculateResponseTemplatePrefix;
+						responseObj.BenefitSecond = $"{GetDeclension(diff, "рубль", "рубля", "рублей")}. ";
+
+						var prefixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (prefixTemplate != null)
+						{
+							responseObj.BenefitSecond += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
+						}
+
+						var suffixTemplate = AnswerTemplateCollection.Templates.FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (suffixTemplate != null)
+						{
+							responseObj.BenefitSecond += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+						}
 					}
 
 					responseObj.ActivePromocodes = Promocode.GetActivePromocodes(request.Client.MobilePhone, request.Client.CardNumber);

@@ -167,6 +167,7 @@ namespace FamilIntegrationService.Providers
 			{
 				if (e.Response == null)
 				{
+					Logger.LogError($"{bpmServiceUri}", e);
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " null response" };
 				}
 				else if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized && isRepeatOnNonAuth)
@@ -177,6 +178,7 @@ namespace FamilIntegrationService.Providers
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{
 					var res = streamReader.ReadToEnd();
+					Logger.LogError($"{bpmServiceUri} {res}", e);
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
 				}
 			}

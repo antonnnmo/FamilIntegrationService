@@ -33,6 +33,29 @@ namespace ProcessingIntegrationService.Models
 		public static PurchaseCalculateResponse FromJson(string json) => JsonConvert.DeserializeObject<PurchaseCalculateResponse>(json, CalculateResponseConverter.Settings);
 	}
 
+	public class BonusInfo
+	{
+	}
+
+	public class BonusInfoMain
+	{
+		[JsonProperty("balance")]
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal Balance { get; set; }
+
+		[JsonProperty("totalBalance")]
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal TotalBalance { get; set; }
+
+		[JsonProperty("availableAmount")]
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal AvailableAmount { get; set; }
+
+		[JsonProperty("minAvailableAmount")]
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal MinAvailableAmount { get; set; }
+	}
+
 	public class Data
 	{
 		[JsonProperty("client")]
@@ -42,22 +65,30 @@ namespace ProcessingIntegrationService.Models
 		public ProductDiscount[] ProductDiscounts { get; set; }
 
 		[JsonProperty("activatedPromotions")]
-		public Promotion[] ActivatedPromotions { get; set; }
+		public List<Promotion> ActivatedPromotions { get; set; }
 
 		[JsonProperty("bonusBalance")]
-		public long BonusBalance { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal BonusBalance { get; set; }
 
 		[JsonProperty("totalBonusBalance")]
-		public long TotalBonusBalance { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal TotalBonusBalance { get; set; }
 
 		[JsonProperty("availableBonusPercent")]
-		public long AvailableBonusPercent { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal AvailableBonusPercent { get; set; }
 
 		[JsonProperty("availableBonusAmount")]
-		public long AvailableBonusAmount { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal AvailableBonusAmount { get; set; }
 
 		[JsonProperty("minAvailableBonusAmount")]
-		public long MinAvailableBonusAmount { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal MinAvailableBonusAmount { get; set; }
+
+		[JsonProperty("bonusInfo")]
+		public Dictionary<string, BonusInfoMain> BonusInfo { get; set; }
 	}
 
 	public class Promotion
@@ -78,8 +109,7 @@ namespace ProcessingIntegrationService.Models
 		public string MobilePhone { get; set; }
 
 		[JsonProperty("authCode")]
-		[JsonConverter(typeof(CalculateResponseParseStringConverter))]
-		public long AuthCode { get; set; }
+		public string AuthCode { get; set; }
 
 		[JsonProperty("brand")]
 		public Brand Brand { get; set; }
@@ -97,8 +127,7 @@ namespace ProcessingIntegrationService.Models
 	public class Card
 	{
 		[JsonProperty("number")]
-		[JsonConverter(typeof(CalculateResponseParseStringConverter))]
-		public long Number { get; set; }
+		public string Number { get; set; }
 
 		[JsonProperty("state")]
 		public string State { get; set; }
@@ -116,7 +145,8 @@ namespace ProcessingIntegrationService.Models
 		public Discount[] Discounts { get; set; }
 
 		[JsonProperty("discount")]
-		public double Discount { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal Discount { get; set; }
 	}
 
 	public class Discount
@@ -128,7 +158,8 @@ namespace ProcessingIntegrationService.Models
 		public string Type { get; set; }
 
 		[JsonProperty("discount")]
-		public double DiscountDiscount { get; set; }
+		[JsonConverter(typeof(DecimalFormatConverter))]
+		public decimal DiscountDiscount { get; set; }
 	}
 
 
@@ -145,9 +176,35 @@ namespace ProcessingIntegrationService.Models
 			DateParseHandling = DateParseHandling.None,
 			Converters =
 			{
-				new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
+				new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal },
+				new DecimalFormatConverter()
 			},
 		};
+	}
+
+	public class DecimalFormatConverter : JsonConverter
+	{
+		public override bool CanConvert(Type objectType)
+		{
+			return (objectType == typeof(decimal));
+		}
+
+		public override void WriteJson(JsonWriter writer, object value,
+									   JsonSerializer serializer)
+		{
+			writer.WriteRawValue(string.Format("{0:F0}", Math.Floor((decimal)value)) + ".00");
+		}
+
+		public override bool CanRead
+		{
+			get { return false; }
+		}
+
+		public override object ReadJson(JsonReader reader, Type objectType,
+									 object existingValue, JsonSerializer serializer)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	internal class CalculateResponseParseStringConverter : JsonConverter
@@ -163,7 +220,7 @@ namespace ProcessingIntegrationService.Models
 			{
 				return l;
 			}
-			throw new Exception("Cannot unmarshal type long");
+			throw new Exception("Cannot unmarshal type long. " + value.ToString());
 		}
 
 		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)

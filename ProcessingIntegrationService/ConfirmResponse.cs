@@ -68,6 +68,9 @@ namespace ProcessingIntegrationService
 
 		[JsonProperty("promotion")]
 		public Promotion Promotion { get; set; }
+
+		[JsonProperty("type")]
+		public string Type { get; set; }
 	}
 
 	public class Promotion

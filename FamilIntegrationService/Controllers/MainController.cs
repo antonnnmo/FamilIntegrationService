@@ -298,15 +298,15 @@ namespace FamilIntegrationService.Controllers
 			{
 				DBConnectionProvider.ExecuteNonQuery(
                     string.Format(
-						@"IF NOT EXISTS(select top 1 1 from ContactBalanceGate where ERPId = '{0}')
+						@"IF NOT EXISTS(select top 1 1 from ContactBalanceGate where ERPId = '{0}' and bonusType = '{2}')
                         BEGIN
-                            Insert into ContactBalanceGate(ERPId, uploadedOn, bonusBalance) VALUES('{0}', GETUTCDATE(), {1})
+                            Insert into ContactBalanceGate(ERPId, uploadedOn, bonusBalance, bonusType) VALUES('{0}', GETUTCDATE(), {1}, '{2}')
                         END
                         ELSE BEGIN
                             update ContactBalanceGate set bonusBalance = {1}, uploadedOn = GETUTCDATE() where ERPId = '{0}'
                         END
                         ", 
-                    balance.ERPId, balance.Balance.ToString().Replace(",", ".")));
+                    balance.ERPId, balance.Balance.ToString().Replace(",", "."), balance.BonusType));
 			}
 
 			return Ok();

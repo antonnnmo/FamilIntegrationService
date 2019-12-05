@@ -10,12 +10,18 @@ using FamilIntegrationService.Models;
 using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Serialization;
 using Npgsql;
 using ProcessingIntegrationService.Managers;
 using ProcessingIntegrationService.Models;
 
 namespace ProcessingIntegrationService.Controllers
 {
+	public class SettingsRequest
+	{
+		public string Value { get; set; }
+	}
+
 	[Route("api/Main")]
 	[ApiController]
 	public class MainController : ControllerBase
@@ -30,6 +36,15 @@ namespace ProcessingIntegrationService.Controllers
 			}
 
 			return BadRequest(new { Result = "parameter errors" });
+		}
+
+		
+
+		[HttpPost("LoadCalculateResponseTemplatePrefix")]
+		public ActionResult LoadCalculateResponseTemplatePrefix([FromBody]SettingsRequest req)
+		{
+			AnswerTemplateCollection.CalculateResponseTemplatePrefix = req.Value;
+			return Ok();
 		}
 
 		[HttpPost("SendProductPrice")]

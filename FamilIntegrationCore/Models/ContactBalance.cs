@@ -7,6 +7,8 @@ namespace FamilIntegrationCore.Models
 		[JsonProperty]
 		public string ERPId { get; set; }
 		[JsonProperty]
+		public string BonusType { get; set; }
+		[JsonProperty]
 		public decimal Balance { get; set; }
 	}
 }
