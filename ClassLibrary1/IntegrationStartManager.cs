@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terrasoft.Core;
 using Terrasoft.Core.DB;
+using Terrasoft.Core.Entities;
 
 namespace Terrasoft.Configuration
 {

@@ -124,6 +124,12 @@ namespace FamilIntegrationService.Providers
 			}
 			catch (WebException e)
 			{
+				if (e.Status == WebExceptionStatus.Timeout)
+				{
+					Logger.LogError(method, e);
+					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message, IsTimeout = true };
+				}
+
 				if (e.Response == null)
 				{
 					Logger.LogError(method, e);
@@ -186,6 +192,11 @@ namespace FamilIntegrationService.Providers
             }
             catch (WebException e)
             {
+				if (e.Status == WebExceptionStatus.Timeout)
+				{
+					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message, IsTimeout = true };
+				}
+
                 if (e.Response == null)
                 {
 					Logger.LogError($"{method}", e);

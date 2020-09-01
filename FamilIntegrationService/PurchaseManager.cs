@@ -128,7 +128,7 @@ namespace FamilIntegrationService
 							}
 							else
 							{
-								results.IntegratePackResult.Add(new PackResult() { Id = purchase.ERPId, IsSuccess = false, ErrorMessage = res.ResponseStr });
+								results.IntegratePackResult.Add(new PackResult() { Id = purchase.ERPId, IsSuccess = false, ErrorMessage = res.ResponseStr, IsTimeout = res.IsTimeout });
 							}
 						}
 

@@ -104,6 +104,18 @@
     <Reference Include="Terrasoft.DB.MSSql">
       <HintPath>..\..\..\..\..\..\..\Stands\Familia\bin\Terrasoft.DB.MSSql.dll</HintPath>
     </Reference>
+    <Reference Include="Terrasoft.Nui">
+      <HintPath>..\..\..\..\..\..\..\Stands\Familia\Terrasoft.WebApp\bin\Terrasoft.Nui.dll</HintPath>
+    </Reference>
+    <Reference Include="Terrasoft.Nui.ServiceModel">
+      <HintPath>..\..\..\..\..\..\..\Stands\Familia\Terrasoft.WebApp\bin\Terrasoft.Nui.ServiceModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Terrasoft.Sync">
+      <HintPath>..\..\..\..\..\..\..\Stands\Familia\Terrasoft.WebApp\bin\Terrasoft.Sync.dll</HintPath>
+    </Reference>
+    <Reference Include="Terrasoft.UI.WebControls">
+      <HintPath>..\..\..\..\..\..\..\Stands\Familia\Terrasoft.WebApp\bin\Terrasoft.UI.WebControls.dll</HintPath>
+    </Reference>
     <Reference Include="Terrasoft.Web.Common">
       <HintPath>..\..\..\..\..\..\..\Stands\Familia\Terrasoft.WebApp\bin\Terrasoft.Web.Common.dll</HintPath>
     </Reference>

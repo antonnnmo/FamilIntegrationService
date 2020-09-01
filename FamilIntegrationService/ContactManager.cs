@@ -36,6 +36,7 @@ namespace FamilIntegrationService
       ,[persDataProcAgreement]
       ,[thereAreEmptyFields]
       ,[bonusBalance]
+	  ,[type]
   FROM [ContactGate]
  Where Status = 0 And Source = 0";
 
@@ -83,7 +84,8 @@ namespace FamilIntegrationService
 								IsMan = reader.GetValue("gender", false),
 								PersDataProcAgreement = reader.GetValue("PersDataProcAgreement", false),
 								RequiresCorrection = reader.GetValue("RequiresCorrection", false),
-								ThereAreEmptyFields = reader.GetValue("ThereAreEmptyFields", String.Empty)
+								ThereAreEmptyFields = reader.GetValue("ThereAreEmptyFields", String.Empty),
+								Type = reader.GetValue("type", -1),
 							});
 						}
 					}

@@ -45,6 +45,8 @@ namespace FamilIntegrationService.Models
 		public string ThereAreEmptyFields { get; set; }
 		[JsonProperty]
 		public decimal BonusBalance { get; set; }
+		[JsonProperty]
+		public int Type { get; set; }
 
 		public string ToJson()
 		{

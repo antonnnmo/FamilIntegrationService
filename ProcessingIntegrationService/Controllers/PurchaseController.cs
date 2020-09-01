@@ -8,6 +8,7 @@ using FamilIntegrationCore.Models;
 using FamilIntegrationService;
 using FamilIntegrationService.Providers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Npgsql;
 using ProcessingIntegrationService.Managers;
@@ -33,8 +34,10 @@ namespace ProcessingIntegrationService.Controllers
 		[HttpPost("calculate")]
 		public ActionResult Calculate([FromBody]PurchaseCalculateRequest request)
 		{
+			var authHeader = HttpContext.Request.Headers["Authorization"];
+			if (authHeader.Count == 0) return Unauthorized();
 			Logger.LogInfo("started processing request", "");
-			var res = PRRequest("calculate", request.ToJson());
+			var res = PRRequest("calculate", request.ToJson(), authHeader);
 			Logger.LogInfo("done processing request", "");
 			if (res.IsSuccess)
 			{
@@ -145,8 +148,10 @@ namespace ProcessingIntegrationService.Controllers
 		[HttpPost("confirm")]
 		public ActionResult Confirm([FromBody]PurchaseConfirmRequest request)
 		{
+			var authHeader = HttpContext.Request.Headers["Authorization"];
+			if (authHeader.Count == 0) return Unauthorized();
 			Logger.LogInfo("started processing request", "");
-			var res = PRRequest("confirm", request.ToJson());
+			var res = PRRequest("confirm", request.ToJson(), authHeader);
 			Logger.LogInfo("done processing request", "");
 			if (res.IsSuccess)
 			{
@@ -242,7 +247,7 @@ namespace ProcessingIntegrationService.Controllers
 
 		}
 
-		private RequestResult PRRequest(string method, string body)
+		private RequestResult PRRequest(string method, string body, StringValues authHeader)
 		{
             var req = (HttpWebRequest)WebRequest.Create(string.Format("{0}/purchase/{1}", _processingUrl, method));
 			req.Method = "POST";
@@ -251,7 +256,7 @@ namespace ProcessingIntegrationService.Controllers
 			req.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Timeout = 10 * 1000 * 60;
-			req.Headers.Add("Authorization", string.Format("Bearer {0}", _processingSecret));
+			req.Headers.Add("Authorization", authHeader);
 
 			using (var requestStream = req.GetRequestStream())
 			{
@@ -278,7 +283,7 @@ namespace ProcessingIntegrationService.Controllers
 			}
 			catch (WebException e)
 			{
-				if (e.Response == null)
+				if (e.Response == null || ((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized)
 				{
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
 				}

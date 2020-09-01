@@ -165,6 +165,11 @@ namespace FamilIntegrationService.Providers
 			}
 			catch (WebException e)
 			{
+				if (e.Status == WebExceptionStatus.Timeout)
+				{
+					Logger.LogError($"{bpmServiceUri}", e);
+					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message, IsTimeout = true };
+				}
 				if (e.Response == null)
 				{
 					Logger.LogError($"{bpmServiceUri}", e);

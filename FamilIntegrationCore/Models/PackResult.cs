@@ -19,6 +19,8 @@ namespace FamilIntegrationService.Models
 	public class PackResult
 	{
 		[JsonProperty]
+		public bool IsTimeout { get; set; }
+		[JsonProperty]
 		public string Id { get; set; }
 		[JsonProperty]
 		public bool IsSuccess { get; set; }

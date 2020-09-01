@@ -59,6 +59,9 @@ namespace ProcessingIntegrationService.Models
 		[JsonProperty("mobilePhone")]
 		public string MobilePhone { get; set; }
 
+		[JsonProperty("id")]
+		public string Id { get; set; }
+
 		[JsonProperty("cardNumber")]
 		public string CardNumber { get; set; }
 
@@ -72,7 +75,7 @@ namespace ProcessingIntegrationService.Models
 		public long Index { get; set; }
 
 		[JsonProperty("price")]
-		public long Price { get; set; }
+		public decimal Price { get; set; }
 
 		[JsonProperty("productCode")]
 		public string ProductCode { get; set; }
@@ -81,7 +84,7 @@ namespace ProcessingIntegrationService.Models
 		public long Quantity { get; set; }
 
 		[JsonProperty("amount")]
-		public long Amount { get; set; }
+		public decimal Amount { get; set; }
 	}
 
 	internal static class Converter

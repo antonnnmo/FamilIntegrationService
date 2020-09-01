@@ -145,7 +145,7 @@ namespace ProcessingIntegrationService.Models
 		public Discount[] Discounts { get; set; }
 
 		[JsonProperty("discount")]
-		[JsonConverter(typeof(DecimalFormatConverter))]
+		[JsonConverter(typeof(DecimalPennyFormatConverter))]
 		public decimal Discount { get; set; }
 	}
 
@@ -158,7 +158,7 @@ namespace ProcessingIntegrationService.Models
 		public string Type { get; set; }
 
 		[JsonProperty("discount")]
-		[JsonConverter(typeof(DecimalFormatConverter))]
+		[JsonConverter(typeof(DecimalPennyFormatConverter))]
 		public decimal DiscountDiscount { get; set; }
 	}
 
@@ -177,9 +177,36 @@ namespace ProcessingIntegrationService.Models
 			Converters =
 			{
 				new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal },
-				new DecimalFormatConverter()
+				new DecimalFormatConverter(),
+				new DecimalPennyFormatConverter()
 			},
 		};
+	}
+
+	public class DecimalPennyFormatConverter : JsonConverter
+	{
+		public override bool CanConvert(Type objectType)
+		{
+			return (objectType == typeof(decimal));
+		}
+
+		public override void WriteJson(JsonWriter writer, object value,
+									   JsonSerializer serializer)
+		{
+			//writer.WriteRawValue(((decimal)value).ToString("F", CultureInfo.InvariantCulture));
+			writer.WriteRawValue((Math.Ceiling((decimal)value * 100) / 100).ToString("F", CultureInfo.InvariantCulture));
+		}
+
+		public override bool CanRead
+		{
+			get { return false; }
+		}
+
+		public override object ReadJson(JsonReader reader, Type objectType,
+									 object existingValue, JsonSerializer serializer)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	public class DecimalFormatConverter : JsonConverter
@@ -192,7 +219,7 @@ namespace ProcessingIntegrationService.Models
 		public override void WriteJson(JsonWriter writer, object value,
 									   JsonSerializer serializer)
 		{
-			writer.WriteRawValue(string.Format("{0:F0}", Math.Floor((decimal)value)) + ".00");
+			writer.WriteRawValue(string.Format("{0:F0}", Math.Ceiling((decimal)value)) + ".00");
 		}
 
 		public override bool CanRead
