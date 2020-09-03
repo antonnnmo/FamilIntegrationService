@@ -20,6 +20,7 @@ namespace FamilIntegrationService.Providers
 			public static string BPMUri { get { return "BPMUri"; } }
 			public static string BPMCSRF { get { return "BPMCSRF"; } }
 			public static string ProcessingUri { get { return "ProcessingUri"; } }
+			public static string PersonalAreaUri { get { return "PersonalAreaUri"; } }
 			public static string ConnectionString { get { return "ConnectionString"; } }
             public static string ProcessingSecret { get { return "ProcessingSecret"; } }
         }

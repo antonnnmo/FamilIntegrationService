@@ -16,9 +16,9 @@ namespace ProcessingIntegrationService.Managers
         {
             var products = models.Select(m => (ProductProcessingModel)m);
             var sb = new StringBuilder();
-            sb.AppendLine(@"INSERT INTO ""public"".""Product"" (""Name"", ""Code"", ""Id"") VALUES ");
+            sb.AppendLine(@"INSERT INTO ""public"".""Product"" (""Code"", ""Id"") VALUES ");
 
-            sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}', '{2}')", (c.Name ?? "").Replace("'", "''"), (c.Code ?? "").Replace("'", "''"), c.Id))));
+            sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}')", (c.Code ?? "").Replace("'", "''"), c.Id))));
 
 			sb.Append(";");
 			sb.AppendLine(@"INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ");
@@ -37,17 +37,17 @@ namespace ProcessingIntegrationService.Managers
 				@"   
                 do $$ begin
                 if (select 1 from ""Product"" where ""Id""='{2}') then
-                    UPDATE ""public"".""Product"" SET ""Name"" = '{0}', ""Code"" = '{1}' WHERE ""Id"" = '{2}';
+                    UPDATE ""public"".""Product"" SET ""Code"" = '{0}' WHERE ""Id"" = '{1}';
                 ELSE
-                    INSERT INTO ""public"".""Product"" (""Name"", ""Code"", ""Id"") VALUES ('{0}', '{1}', '{2}');
+                    INSERT INTO ""public"".""Product"" (""Code"", ""Id"") VALUES ('{0}', '{1}');
                 END IF;
-				if (select 1 from ""ProductPrice"" where ""Code""='{1}') then
-                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {3} WHERE ""Code"" = '{1}';
+				if (select 1 from ""ProductPrice"" where ""Code""='{0}') then
+                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {2} WHERE ""Code"" = '{0}';
                 ELSE
-                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{3}', '{1}');
+                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{2}', '{0}');
                 END IF;
                 END $$",
-                (product.Name ?? "").Replace("'", "''"), (product.Code ?? "").Replace("'", "''"), product.Id, product.Price.ToString().Replace(",", "."));
+                (product.Code ?? "").Replace("'", "''"), product.Id, product.Price.ToString().Replace(",", "."));
         }
 
 		internal void ChangeProductPrice(SendProductPriceRequest request)
