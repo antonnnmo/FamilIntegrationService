@@ -64,6 +64,10 @@ namespace LoyaltyMiddleware.Controllers
 				var handledResponse = afterRequestHandler.GetHandledResponse(request, responseData, additionalResponseData);
 				return Ok(handledResponse);
 			}
+			else if (response.IsUnathorized) 
+			{
+				return Unauthorized();
+			}
 			else
 			{
 				return BadRequest(response.ResponseStr);

@@ -17,12 +17,12 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 		public Dictionary<string, object> GetHandledResponse(Dictionary<string, object> requestData, Dictionary<string, object> responseData, Dictionary<string, object> additionalResponseData)
 		{
 			//todo: confirm middlewarecode
-			if (requestData["client"] != null && (requestData["client"] as JObject)["mobilePhone"].ToString() == noNamePhone)
+			if (requestData["client"] != null && (requestData["client"] as JObject)["mobilePhone"]?.ToString() == noNamePhone)
 			{
 				if (responseData.ContainsKey("client")) responseData.Remove("client");
 				responseData.Add("client", new ResponseClient() { Name = "NoName" });
 			}
-			else if (requestData["client"] != null && (requestData["client"] as JObject)["mobilePhone"].ToString() == sberbankPhone)
+			else if (requestData["client"] != null && (requestData["client"] as JObject)["mobilePhone"]?.ToString() == sberbankPhone)
 			{
 				if (responseData.ContainsKey("client")) responseData.Remove("client");
 				responseData.Add("client", new ResponseClient() { Name = "Sberbank" });

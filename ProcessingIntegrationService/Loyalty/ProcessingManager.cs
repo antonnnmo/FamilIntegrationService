@@ -58,6 +58,8 @@ namespace LoyaltyMiddleware.Loyalty
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message };
 				}
 
+				if(((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.Unauthorized) return new RequestResult() { IsSuccess = false, IsUnathorized = true };
+
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{
 					var res = streamReader.ReadToEnd();

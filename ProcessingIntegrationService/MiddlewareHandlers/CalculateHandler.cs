@@ -16,52 +16,6 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 		{
 			if (responseData.ContainsKey("success") && (bool)responseData["success"] == true)
 			{
-				if (responseData.ContainsKey("data") && responseData["data"] != null) 
-				{
-					var data = (responseData["data"] as Newtonsoft.Json.Linq.JObject);
-					if (data.ContainsKey("productDiscounts") && data["productDiscounts"] != null)
-					{
-						var removedDiscounts = new List<JToken>();
-						var remainingDiscounts = new List<JToken>();
-						var discounts = (data["productDiscounts"] as Newtonsoft.Json.Linq.JArray).ToList();
-						discounts.ForEach(productDiscount =>
-						{
-							if (productDiscount["discounts"] != null)
-							{
-								var promotionDiscounts = (productDiscount["discounts"] as JArray).Where(d => d["type"].ToString() == "Promotion");
-
-								if (promotionDiscounts.Count() > 0)
-								{
-									var maxDiscount = promotionDiscounts.Aggregate((d1, d2) => (decimal)d1["discountDiscount"] > (decimal)d2["discountDiscount"] ? d1 : d2);
-
-									var removingDiscounts = (productDiscount["discounts"] as JArray).Where(d => d["type"].ToString() == "Promotion" && d != maxDiscount);
-									if (removingDiscounts.Count() > 0)
-									{
-										removedDiscounts.AddRange(removingDiscounts);
-									}
-
-									var newDiscounts = (productDiscount["discounts"] as JArray).ToList();
-									newDiscounts.RemoveAll(d => d["type"].ToString() == "Promotion" && d != maxDiscount);
-									remainingDiscounts.AddRange(newDiscounts);
-									(productDiscount["discounts"] as JArray).ReplaceAll(newDiscounts);
-									//productDiscount["Discounts"] = newDiscounts as JToken;
-
-									productDiscount["discount"] = newDiscounts.Sum(d => Convert.ToDecimal(d["discountDiscount"]));
-								}
-							}
-						});
-
-						if (removedDiscounts.Count > 0)
-						{
-							var notExistingDiscounts = removedDiscounts.Where(d => remainingDiscounts.Count(d1 => d1["promotion"] != null && d1["promotion"]["name"] == d["promotion"]["name"]) == 0);
-							var activatedPromotions = (data["activatedPromotions"] as Newtonsoft.Json.Linq.JArray).ToList();
-							activatedPromotions.RemoveAll(ap => notExistingDiscounts.Count(d => d["promotion"] != null && d["promotion"]["name"] == ap["name"]) > 0);
-
-						}
-					}
-				}
-
-
 				var price = 0d;
 				var prices = new Dictionary<string, double>();
 				using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
@@ -97,24 +51,27 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 						discounts = Convert.ToInt32(((responseData["data"] as JObject)["productDiscounts"] as JArray).Sum(pd => pd["discounts"] == null ? 0 : (pd["discounts"] as JArray).Sum(d => (decimal)d["discount"])));
 					}
 
-					var diff = Convert.ToInt32(price - Convert.ToDouble(requestData["amount"]) + discounts);
-					responseData.Add("benefitAmount", diff.ToString());
-
-					var now = DateTime.UtcNow;
-					responseData.Add("benefitFirst", AnswerTemplateCollection.CalculateResponseTemplatePrefix);
-					responseData.Add("benefitSecond",  $"{ GetDeclension(diff, "рубль", "рубля", "рублей")}. ");
-
-					var rand = new Random();
-					var prefixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (prefixTemplate != null)
+					if (requestData.ContainsKey("amount"))
 					{
-						responseData["benefitSecond"] += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
-					}
+						var diff = Convert.ToInt32(price - Convert.ToDouble(requestData["amount"]) + discounts);
+						responseData.Add("benefitAmount", diff.ToString());
 
-					var suffixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
-					if (suffixTemplate != null)
-					{
-						responseData["benefitSecond"] += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+						var now = DateTime.UtcNow;
+						responseData.Add("benefitFirst", AnswerTemplateCollection.CalculateResponseTemplatePrefix);
+						responseData.Add("benefitSecond", $"{ GetDeclension(diff, "рубль", "рубля", "рублей")}. ");
+
+						var rand = new Random();
+						var prefixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (prefixTemplate != null)
+						{
+							responseData["benefitSecond"] += $"{prefixTemplate.PrefixText} {Convert.ToInt32(prefixTemplate.Price != 0 ? diff / prefixTemplate.Price : 0)} {prefixTemplate.SuffixText} ";
+						}
+
+						var suffixTemplate = AnswerTemplateCollection.Templates.OrderBy(t => rand.Next()).FirstOrDefault(t => !t.IsFirstTextBlock && t.From <= diff && diff <= t.To && t.Start <= now && now <= t.End);
+						if (suffixTemplate != null)
+						{
+							responseData["benefitSecond"] += $"{suffixTemplate.PrefixText} {Convert.ToInt32(suffixTemplate.Price != 0 ? diff / suffixTemplate.Price : 0)} {suffixTemplate.SuffixText}";
+						}
 					}
 				}
 
