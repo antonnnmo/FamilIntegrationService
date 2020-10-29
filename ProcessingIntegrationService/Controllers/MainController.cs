@@ -38,8 +38,6 @@ namespace ProcessingIntegrationService.Controllers
 			return BadRequest(new { Result = "parameter errors" });
 		}
 
-		
-
 		[HttpPost("LoadCalculateResponseTemplatePrefix")]
 		public ActionResult LoadCalculateResponseTemplatePrefix([FromBody]SettingsRequest req)
 		{
@@ -58,6 +56,7 @@ namespace ProcessingIntegrationService.Controllers
 
 			return BadRequest(new { Result = "parameter errors" });
 		}
+
 		[HttpPost("SendPromocodePool")]
 		public ActionResult SendPromocodePool([FromBody]SendPromocodePoolRequest request)
 		{

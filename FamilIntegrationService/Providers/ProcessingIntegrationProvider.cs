@@ -147,7 +147,7 @@ namespace FamilIntegrationService.Providers
 				using (var streamReader = new StreamReader(e.Response.GetResponseStream()))
 				{
 					var res = streamReader.ReadToEnd();
-					Logger.LogError($"{method} {res}", e);
+					Logger.LogError($"{method} {res} {_token} {body}", e);
 					return new RequestResult() { IsSuccess = false, ResponseStr = e.Message + " " + res };
 				}
 			}

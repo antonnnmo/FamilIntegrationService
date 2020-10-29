@@ -33,21 +33,22 @@ namespace ProcessingIntegrationService.Managers
         protected override string GetQuery(BaseProcessingModel model)
         {
             var product = (ProductProcessingModel)model;
-            return string.Format(
-				@"   
+			var productCode = (product.Code ?? "").Replace("'", "''");
+			var price = product.Price.ToString().Replace(",", ".");
+			return 
+				$@"   
                 do $$ begin
-                if (select 1 from ""Product"" where ""Id""='{2}') then
-                    UPDATE ""public"".""Product"" SET ""Code"" = '{0}' WHERE ""Id"" = '{1}';
+                if (select 1 from ""Product"" where ""Id""='{product.Id}') then
+                    UPDATE ""public"".""Product"" SET ""Code"" = '{productCode}' WHERE ""Id"" = '{product.Id}';
                 ELSE
-                    INSERT INTO ""public"".""Product"" (""Code"", ""Id"") VALUES ('{0}', '{1}');
+                    INSERT INTO ""public"".""Product"" (""Code"", ""Id"") VALUES ('{productCode}', '{product.Id}');
                 END IF;
-				if (select 1 from ""ProductPrice"" where ""Code""='{0}') then
-                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {2} WHERE ""Code"" = '{0}';
+				if (select 1 from ""ProductPrice"" where ""Code""='{productCode}') then
+                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {price} WHERE ""Code"" = '{productCode}';
                 ELSE
-                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{2}', '{0}');
+                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{price}', '{productCode}');
                 END IF;
-                END $$",
-                (product.Code ?? "").Replace("'", "''"), product.Id, product.Price.ToString().Replace(",", "."));
+                END $$";
         }
 
 		internal void ChangeProductPrice(SendProductPriceRequest request)
