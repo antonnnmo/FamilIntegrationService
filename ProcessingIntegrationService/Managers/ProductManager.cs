@@ -21,7 +21,7 @@ namespace ProcessingIntegrationService.Managers
             sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"('{0}', '{1}')", (c.Code ?? "").Replace("'", "''"), c.Id))));
 
 			sb.Append(";");
-			sb.AppendLine(@"INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ");
+			sb.AppendLine(@"INSERT INTO ""public"".""ProductRecommendedPrice"" (""Price"", ""Code"") VALUES ");
 
 			sb.AppendLine(String.Join(",", products.Select(c => String.Format(@"({0}, '{1}')", c.Price.ToString().Replace(",", "."), (c.Code ?? "").Replace("'", "''")))));
 			var res = sb.ToString();
@@ -43,15 +43,15 @@ namespace ProcessingIntegrationService.Managers
                 ELSE
                     INSERT INTO ""public"".""Product"" (""Code"", ""Id"") VALUES ('{productCode}', '{product.Id}');
                 END IF;
-				if (select 1 from ""ProductPrice"" where ""Code""='{productCode}') then
-                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {price} WHERE ""Code"" = '{productCode}';
+				if (select 1 from ""ProductRecommendedPrice"" where ""Code""='{productCode}') then
+                    UPDATE ""public"".""ProductRecommendedPrice"" SET ""Price"" = {price} WHERE ""Code"" = '{productCode}';
                 ELSE
-                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{price}', '{productCode}');
+                    INSERT INTO ""public"".""ProductRecommendedPrice"" (""Price"", ""Code"") VALUES ('{price}', '{productCode}');
                 END IF;
                 END $$";
         }
 
-		internal void ChangeProductPrice(SendProductPriceRequest request)
+		internal void ChangeProductRecommendedPrice(SendProductPriceRequest request)
 		{
 			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
 			{
@@ -59,10 +59,10 @@ namespace ProcessingIntegrationService.Managers
 				var query = string.Format(
 				@"   
                 do $$ begin
-				if (select 1 from ""ProductPrice"" where ""Code""='{0}') then
-                    UPDATE ""public"".""ProductPrice"" SET ""Price"" = {1} WHERE ""Code"" = '{0}';
+				if (select 1 from ""ProductRecommendedPrice"" where ""Code""='{0}') then
+                    UPDATE ""public"".""ProductRecommendedPrice"" SET ""Price"" = {1} WHERE ""Code"" = '{0}';
                 ELSE
-                    INSERT INTO ""public"".""ProductPrice"" (""Price"", ""Code"") VALUES ('{1}', '{0}');
+                    INSERT INTO ""public"".""ProductRecommendedPrice"" (""Price"", ""Code"") VALUES ('{1}', '{0}');
                 END IF;
                 END $$",
 				(request.Code ?? "").Replace("'", "''"), request.Price.ToString().Replace(",", "."));
@@ -76,10 +76,10 @@ namespace ProcessingIntegrationService.Managers
 			{
 				conn.Open();
 				var query =
-					@"CREATE TABLE IF NOT EXISTS public.""ProductPrice"" (
+					@"CREATE TABLE IF NOT EXISTS public.""ProductRecommendedPrice"" (
 						""Code"" text NOT NULL,
 						""Price"" double precision NULL,
-					CONSTRAINT ""PK_ProductPrice"" PRIMARY KEY(""Code"")
+					CONSTRAINT ""PK_ProductRecommendedPrice"" PRIMARY KEY(""Code"")
                     );
                     ";
 				new NpgsqlCommand(query, conn).ExecuteNonQuery();

@@ -50,7 +50,7 @@ namespace ProcessingIntegrationService.Controllers
 		{
 			if (request != null)
 			{
-				new ProductManager().ChangeProductPrice(request);
+				new ProductManager().ChangeProductRecommendedPrice(request);
 				return Ok(new { Result = "success" });
 			}
 

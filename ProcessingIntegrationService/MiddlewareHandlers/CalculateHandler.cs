@@ -26,7 +26,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 					using (var cmd = new NpgsqlCommand())
 					{
 						cmd.Connection = conn;
-						cmd.CommandText = String.Format(@"SELECT ""Price"", ""Code"" FROM public.""ProductPrice"" WHERE ""Code"" IN({0})", String.Join(",", (requestData["products"] as JArray).Select(p => String.Format("'{0}'", p["productCode"]))));
+						cmd.CommandText = String.Format(@"SELECT ""Price"", ""Code"" FROM public.""ProductRecommendedPrice"" WHERE ""Code"" IN({0})", String.Join(",", (requestData["products"] as JArray).Select(p => String.Format("'{0}'", p["productCode"]))));
 
 						using (var reader = cmd.ExecuteReader())
 						{
