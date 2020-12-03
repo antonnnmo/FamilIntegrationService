@@ -29,7 +29,7 @@ namespace ProcessingIntegrationService.Managers
 						""RegistrationDate"",
 						""PhoneConfirmed"") VALUES ");
 
-			sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', {11}, '{{ ""SmrRequiresCorrection"": ""{12}"", ""SmrThereAreEmptyFields"": ""{13}"", ""SmrPersDataProcAgreement"": ""{14}""}}', (SELECT ""Id"" FROM ""public"".""Shop"" WHERE ""Code"" = '{15}'), {16}, true)",
+			sb.AppendLine(String.Join(",", contacts.Select(c => String.Format(@"('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', {11}, '{{ ""SmrRequiresCorrection"": ""{12}"", ""SmrThereAreEmptyFields"": ""{13}"", ""SmrPersDataProcAgreement"": ""{14}""}}', (SELECT ""Id"" FROM ""public"".""Shop"" WHERE ""Code"" = '{15}'), {16}, false)",
 				(c.FirstName ?? String.Empty).Replace("'", "''"),
 				(c.Phone ?? String.Empty).Replace("'", "''"),
 				c.Id.ToString(),
@@ -74,8 +74,7 @@ namespace ProcessingIntegrationService.Managers
 						""Birthday"" = {11},
 						""CustomFields"" = '{{ ""SmrRequiresCorrection"": ""{12}"", ""SmrThereAreEmptyFields"": ""{13}"", ""SmrPersDataProcAgreement"": ""{14}""}}',
 						""RegistrationPlaceId"" = (SELECT ""Id"" FROM ""public"".""Shop"" WHERE ""Code"" = '{15}'),
-						""RegistrationDate"" = {16},
-						""PhoneConfirmed"" = true
+						""RegistrationDate"" = {16}
 					WHERE ""Id"" = '{2}';
                 ELSE
                     INSERT INTO ""public"".""Contact"" (
@@ -96,7 +95,7 @@ namespace ProcessingIntegrationService.Managers
 						""RegistrationDate"",
 						""PhoneConfirmed""
 
-						) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', {11}, '{{ ""SmrRequiresCorrection"": ""{12}"", ""SmrThereAreEmptyFields"": ""{13}"", ""SmrPersDataProcAgreement"": ""{14}""}}', (SELECT ""Id"" FROM ""public"".""Shop"" WHERE ""Code"" = '{15}'), {16}, true);
+						) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', {11}, '{{ ""SmrRequiresCorrection"": ""{12}"", ""SmrThereAreEmptyFields"": ""{13}"", ""SmrPersDataProcAgreement"": ""{14}""}}', (SELECT ""Id"" FROM ""public"".""Shop"" WHERE ""Code"" = '{15}'), {16}, false);
                 END IF;
                 END $$
                 ",
