@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationService", "FamilIntegrationService\FamilIntegrationService.csproj", "{8E6932DF-052C-4BA4-A9EF-F20291C1C164}"
 EndProject
@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProcessingIntegrationServic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationCore", "FamilIntegrationCore\FamilIntegrationCore.csproj", "{837603A7-C938-40A2-BE51-D3715277CFBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAreaIntegrationService", "PersonalAreaIntegrationService\PersonalAreaIntegrationService.csproj", "{C10B3592-240F-4B78-8152-A0EFB6FEE416}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonalAreaIntegrationService", "PersonalAreaIntegrationService\PersonalAreaIntegrationService.csproj", "{C10B3592-240F-4B78-8152-A0EFB6FEE416}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringHelperService", "MonitoringService\MonitoringHelperService.csproj", "{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C10B3592-240F-4B78-8152-A0EFB6FEE416}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
