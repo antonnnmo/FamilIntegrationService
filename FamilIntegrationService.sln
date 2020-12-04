@@ -5,15 +5,13 @@ VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationService", "FamilIntegrationService\FamilIntegrationService.csproj", "{8E6932DF-052C-4BA4-A9EF-F20291C1C164}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProcessingIntegrationService", "ProcessingIntegrationService\ProcessingIntegrationService.csproj", "{5A535D91-339A-4390-9C51-709A10250A84}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamilIntegrationCore", "FamilIntegrationCore\FamilIntegrationCore.csproj", "{837603A7-C938-40A2-BE51-D3715277CFBF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonalAreaIntegrationService", "PersonalAreaIntegrationService\PersonalAreaIntegrationService.csproj", "{C10B3592-240F-4B78-8152-A0EFB6FEE416}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringHelperService", "MonitoringService\MonitoringHelperService.csproj", "{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringHelperService", "MonitoringService\MonitoringHelperService.csproj", "{E1CA3E7C-EA46-4AC3-A6BB-8C0674FE5728}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +23,6 @@ Global
 		{8E6932DF-052C-4BA4-A9EF-F20291C1C164}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E6932DF-052C-4BA4-A9EF-F20291C1C164}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E6932DF-052C-4BA4-A9EF-F20291C1C164}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F56D526-6E83-4AE1-BA03-3D94EB0F7090}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A535D91-339A-4390-9C51-709A10250A84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A535D91-339A-4390-9C51-709A10250A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A535D91-339A-4390-9C51-709A10250A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
