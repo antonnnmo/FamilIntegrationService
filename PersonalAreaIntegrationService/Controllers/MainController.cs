@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using FamilIntegrationCore.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using ProcessingIntegrationService;
 using ProcessingIntegrationService.Managers;
 
 namespace PersonalAreaIntegrationService.Controllers
 {
-	[Route("api/main")]
+	[Route("api/Main")]
 	[ApiController]
 	public class MainController : ControllerBase
 	{
@@ -73,6 +75,75 @@ namespace PersonalAreaIntegrationService.Controllers
 		public ActionResult LoadCardPack([FromBody]IEnumerable<CardProcessingModel> cards)
 		{
 			return new CardManager().LoadPack(cards);
+		}
+
+		[HttpPost("MergeProductDuplicate")]
+		public ActionResult MergeProductDuplicate([FromBody] ProductPack pack)
+		{
+			var primaryId = pack.Duplicates.FirstOrDefault(p => p.IsPrimary).ProductId;
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
+			{
+				conn.Open();
+
+				var req = $@"DO
+						$do$
+						BEGIN
+						IF 0 = (Select COUNT(*) from public.""Product"" Where ""Id"" = '{primaryId}') THEN
+							Insert into public.""Product""(""Id"", ""Code"", ""Name"")
+							VALUES('{primaryId}', '9999999999', (Select ""Name"" from public.""Product"" Where ""Code"" = '{pack.Code}' limit 1));
+								END IF;
+								END
+						$do$";
+
+				using (var cmd = new NpgsqlCommand())
+				{
+					cmd.Connection = conn;
+					cmd.CommandText = req;
+					cmd.ExecuteNonQuery();
+				}
+
+				foreach (var duplicate in pack.Duplicates.Where(p => !p.IsPrimary))
+				{
+					var req1 = $@"
+					Update public.""PurchaseProduct"" Set ""ProductId"" = '{primaryId}' Where ""ProductId"" = '{duplicate.ProductId}';
+					delete from public.""Product"" Where ""Id"" = '{duplicate.ProductId}';
+				";
+
+					using (var cmd = new NpgsqlCommand())
+					{
+						cmd.Connection = conn;
+						cmd.CommandText = req1;
+						cmd.ExecuteNonQuery();
+					}
+				}
+
+				var req2 = $@"
+					Update public.""Product"" Set ""Code"" = '{pack.Code}' Where ""Id"" = '{primaryId}'
+				";
+
+				using (var cmd = new NpgsqlCommand())
+				{
+					cmd.Connection = conn;
+					cmd.CommandText = req2;
+					cmd.ExecuteNonQuery();
+				}
+			}
+
+			return Ok();
+		}
+
+
+		public class MergeProductsDuplicateObj
+		{
+			public Guid ProductId { get; set; }
+			public bool IsPrimary { get; set; }
+			public string Code { get; set; }
+		}
+
+		public class ProductPack
+		{
+			public string Code { get; set; }
+			public List<MergeProductsDuplicateObj> Duplicates { get; set; }
 		}
 	}
 }

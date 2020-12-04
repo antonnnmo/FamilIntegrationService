@@ -2,11 +2,13 @@
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using ProcessingIntegrationService;
+using ProcessingIntegrationService.Coupons;
 using ProcessingIntegrationService.Managers;
 using ProcessingIntegrationService.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static ProcessingIntegrationService.Models.CouponResponse;
 
 namespace LoyaltyMiddleware.MiddlewareHandlers
 {
@@ -85,7 +87,57 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 				responseData = new Dictionary<string, object>[] { responseData, additionalResponseData }.SelectMany(dict => dict)
 						 .ToDictionary(pair => pair.Key, pair => pair.Value);
 			}
+
+			RemoveCoupon(responseData, requestData);
+			var couponTexts = GetCoupons(responseData);
+
+			responseData.Add("coupons", couponTexts);
+
 			return responseData;
+		}
+
+		private List<CouponResponse> GetCoupons(Dictionary<string, object> responseData)
+		{
+			var couponTexts = new List<CouponResponse>();
+			if (responseData["data"] != null && (responseData["data"] as JObject)["activatedPromotions"] != null)
+			{
+				var promotions = (responseData["data"] as JObject)["activatedPromotions"] as JArray;
+				var promotionIds = promotions.Select(p => {
+					if ((p as JObject)["id"] != null && Guid.TryParse((p as JObject)["id"].ToString(), out Guid id))
+						return id;
+					else return Guid.Empty;
+				});
+
+				if (promotionIds.Count() > 0) 
+				{
+					var coupons = CouponCache.Coupons.Where(c => c.Promotions != null && c.Promotions.Any(p => promotionIds.Contains(p.Id))).ToList();
+
+					if (coupons != null && coupons.Count() > 0) 
+					{
+						couponTexts = coupons.Select(coupon => 
+							new CouponResponse() { Name = coupon.Name, Texts = coupon.Texts.Select(c => new CouponTextResponse() { Index = c.Order, Text = c.Text }).ToList() }
+						).ToList();
+					}
+				}
+			}
+
+			return couponTexts;
+		}
+
+		private void RemoveCoupon(Dictionary<string, object> responseData, Dictionary<string, object> requestData)
+		{
+
+			var couponProduct = (requestData["products"] as JArray).FirstOrDefault(p => (p as JObject)["productCode"] != null && (p as JObject)["productCode"].ToString() == "coupon") as JObject;
+			if (couponProduct != null) 
+			{
+				var index = couponProduct["index"].ToString();
+				if (responseData["data"] != null && (responseData["data"] as JObject)["productDiscounts"] != null)
+				{
+					var productDiscounts = (responseData["data"] as JObject)["productDiscounts"] as JArray;
+					var couponDiscount = productDiscounts.FirstOrDefault(d => (d as JObject)["index"].ToString() == index);
+					if (couponDiscount != null) productDiscounts.Remove(couponDiscount);
+				}
+			}
 		}
 
 		private static string GetDeclension(int number, string nominativ, string genetiv, string plural)

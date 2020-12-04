@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 using Npgsql;
+using ProcessingIntegrationService.Coupons;
 using ProcessingIntegrationService.Managers;
 using ProcessingIntegrationService.Models;
 
@@ -27,7 +28,7 @@ namespace ProcessingIntegrationService.Controllers
 	public class MainController : ControllerBase
 	{
 		[HttpPost("LoadAnswerTemplate")]
-		public ActionResult LoadAnswerTemplate([FromBody]List<AnswerTemplate> templates)
+		public ActionResult LoadAnswerTemplate([FromBody] List<AnswerTemplate> templates)
 		{
 			if (templates != null)
 			{
@@ -39,14 +40,14 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("LoadCalculateResponseTemplatePrefix")]
-		public ActionResult LoadCalculateResponseTemplatePrefix([FromBody]SettingsRequest req)
+		public ActionResult LoadCalculateResponseTemplatePrefix([FromBody] SettingsRequest req)
 		{
 			AnswerTemplateCollection.CalculateResponseTemplatePrefix = req.Value;
 			return Ok();
 		}
 
 		[HttpPost("SendProductPrice")]
-		public ActionResult SendProductPrice([FromBody]SendProductPriceRequest request)
+		public ActionResult SendProductPrice([FromBody] SendProductPriceRequest request)
 		{
 			if (request != null)
 			{
@@ -58,7 +59,7 @@ namespace ProcessingIntegrationService.Controllers
 		}
 
 		[HttpPost("SendPromocodePool")]
-		public ActionResult SendPromocodePool([FromBody]SendPromocodePoolRequest request)
+		public ActionResult SendPromocodePool([FromBody] SendPromocodePoolRequest request)
 		{
 			if (request != null)
 			{
@@ -71,58 +72,138 @@ namespace ProcessingIntegrationService.Controllers
 
 		[HttpPost("LoadContactPack")]
 		[Authorize]
-		public ActionResult LoadContactPack([FromBody]IEnumerable<ContactProcessingModel> contacts)
+		public ActionResult LoadContactPack([FromBody] IEnumerable<ContactProcessingModel> contacts)
 		{
-            return new ContactManager().LoadPack(contacts);
-        }
+			return new ContactManager().LoadPack(contacts);
+		}
 
 		[HttpPost("LoadPrimaryContactPack")]
 		[Authorize]
-		public ActionResult LoadPrimaryContactPack([FromBody]IEnumerable<ContactProcessingModel> contacts)
+		public ActionResult LoadPrimaryContactPack([FromBody] IEnumerable<ContactProcessingModel> contacts)
 		{
-            return new ContactManager().LoadPrimaryPack(contacts);
-        }
+			return new ContactManager().LoadPrimaryPack(contacts);
+		}
 
 		[HttpPost("LoadPrimaryShopPack")]
 		[Authorize]
-		public ActionResult LoadPrimaryShopPack([FromBody]IEnumerable<ShopProcessingModel> contacts)
+		public ActionResult LoadPrimaryShopPack([FromBody] IEnumerable<ShopProcessingModel> contacts)
 		{
-            return new ShopManager().LoadPrimaryPack(contacts);
-        }
+			return new ShopManager().LoadPrimaryPack(contacts);
+		}
 
 		[HttpPost("LoadShopPack")]
 		[Authorize]
-		public ActionResult LoadShopPack([FromBody]IEnumerable<ShopProcessingModel> contacts)
+		public ActionResult LoadShopPack([FromBody] IEnumerable<ShopProcessingModel> contacts)
 		{
-            return new ShopManager().LoadPack(contacts);
-        }
+			return new ShopManager().LoadPack(contacts);
+		}
 
 		[HttpPost("LoadPrimaryProductPack")]
 		[Authorize]
-		public ActionResult LoadPrimaryProductPack([FromBody]IEnumerable<ProductProcessingModel> contacts)
+		public ActionResult LoadPrimaryProductPack([FromBody] IEnumerable<ProductProcessingModel> contacts)
 		{
-            return new ProductManager().LoadPrimaryPack(contacts);
-        }
+			return new ProductManager().LoadPrimaryPack(contacts);
+		}
 
 		[HttpPost("LoadProductPack")]
 		[Authorize]
-		public ActionResult LoadProductPack([FromBody]IEnumerable<ProductProcessingModel> contacts)
+		public ActionResult LoadProductPack([FromBody] IEnumerable<ProductProcessingModel> contacts)
 		{
-            return new ProductManager().LoadPack(contacts);
-        }
+			return new ProductManager().LoadPack(contacts);
+		}
 
-        [HttpPost("LoadPrimaryCardPack")]
-        [Authorize]
-        public ActionResult LoadPrimaryCardPack([FromBody]IEnumerable<CardProcessingModel> cards)
-        {
-            return new CardManager().LoadPrimaryPack(cards);
-        }
+		[HttpPost("LoadPrimaryCardPack")]
+		[Authorize]
+		public ActionResult LoadPrimaryCardPack([FromBody] IEnumerable<CardProcessingModel> cards)
+		{
+			return new CardManager().LoadPrimaryPack(cards);
+		}
 
-        [HttpPost("LoadCardPack")]
-        [Authorize]
-        public ActionResult LoadCardPack([FromBody]IEnumerable<CardProcessingModel> cards)
-        {
-            return new CardManager().LoadPack(cards);
-        }
-    }
+		[HttpPost("LoadCardPack")]
+		[Authorize]
+		public ActionResult LoadCardPack([FromBody] IEnumerable<CardProcessingModel> cards)
+		{
+			return new CardManager().LoadPack(cards);
+		}
+
+		[HttpPost("MergeProductDuplicate")]
+		public ActionResult MergeProductDuplicate([FromBody] ProductPack pack)
+		{
+			var primaryId = pack.Duplicates.FirstOrDefault(p => p.IsPrimary).ProductId;
+			using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
+			{
+				conn.Open();
+
+				var req = $@"DO
+						$do$
+						BEGIN
+						IF 0 = (Select COUNT(*) from public.""Product"" Where ""Id"" = '{primaryId}') THEN
+							Insert into public.""Product""(""Id"", ""Code"")
+							VALUES('{primaryId}', '9999999999');
+								END IF;
+								END
+						$do$";
+
+				using (var cmd = new NpgsqlCommand())
+				{
+					cmd.Connection = conn;
+					cmd.CommandText = req;
+					cmd.ExecuteNonQuery();
+				}
+
+				foreach (var duplicate in pack.Duplicates.Where(p => !p.IsPrimary))
+				{
+					var req1 = $@"
+					Update public.""ProductInSegment"" Set ""ProductId"" = '{primaryId}' Where ""ProductId"" = '{duplicate.ProductId}';
+					Update public.""PurchaseProduct"" Set ""ProductId"" = '{primaryId}' Where ""ProductId"" = '{duplicate.ProductId}';
+					Update public.""RefundProduct"" Set ""ProductId"" = '{primaryId}' Where ""ProductId"" = '{duplicate.ProductId}';
+					delete from public.""Product"" Where ""Id"" = '{duplicate.ProductId}';
+				";
+
+					using (var cmd = new NpgsqlCommand())
+					{
+						cmd.Connection = conn;
+						cmd.CommandText = req1;
+						cmd.ExecuteNonQuery();
+					}
+				}
+
+				var req2 = $@"
+					Update public.""Product"" Set ""Code"" = '{pack.Code}' Where ""Id"" = '{primaryId}'
+				";
+
+				using (var cmd = new NpgsqlCommand())
+				{
+					cmd.Connection = conn;
+					cmd.CommandText = req2;
+					cmd.ExecuteNonQuery();
+				}
+			}
+
+			return Ok();
+		}
+
+
+		[HttpPost("updateCoupon")]
+		[Authorize]
+		public ActionResult UpdateCoupon([FromBody] Coupon coupon) 
+		{
+			CouponCache.UpdateCoupon(coupon);
+			return Ok();
+		}
+
+		public class MergeProductsDuplicateObj
+		{
+			public Guid ProductId { get; set; }
+			public bool IsPrimary { get; set; }
+			public string Code { get; set; }
+		}
+
+		public class ProductPack
+		{
+			public string Code { get; set; }
+			public List<MergeProductsDuplicateObj> Duplicates { get; set; }
+		}
+
+	}
 }
