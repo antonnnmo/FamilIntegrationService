@@ -13,7 +13,7 @@ using Npgsql;
 namespace MonitoringService.Controllers
 {
     [ApiController]
-    [Route("select")]
+    [Route("api/select")]
     public class EntityController : ControllerBase
     {
         private readonly ILogger<EntityController> _logger;
