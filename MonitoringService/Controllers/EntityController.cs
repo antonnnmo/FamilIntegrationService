@@ -70,11 +70,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 		[HttpPost("product")]
@@ -124,11 +125,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 		[HttpPost("shop")]
@@ -178,11 +180,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 	}
