@@ -11,7 +11,7 @@ namespace RedmondLoyaltyMiddleware.MiddlewareHandlers
 			var result = new PreHandlerResult();
 
 			if (requestData.ContainsKey("useMaxDiscount")) requestData.Remove("useMaxDiscount");
-			requestData.Add("useMaxDiscount", true);
+			requestData.Add("useMaxDiscount", false);
 
 			if (requestData.ContainsKey("products"))
 			{

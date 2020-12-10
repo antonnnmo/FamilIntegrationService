@@ -1,5 +1,10 @@
 ﻿import React, { Component } from 'react';
 import { Chart } from 'primereact/chart';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
 
 export class Home extends Component {
   static displayName = Home.name;
@@ -28,15 +33,21 @@ export class Home extends Component {
         
         this.request = this.request.bind(this);
         this.getData = this.getData.bind(this);
+        this.handleChange = this.handleChange.bind(this);
 
         this.state = {
             data: this.getData([]),
             results: [],
             excessRate: 0,
-            eventsCount: 0
+            eventsCount: 0,
+            period: 'minute'
         };
 
         this.request();
+    }
+
+    handleChange = name => evt => {
+        this.setState({ [name]: evt.target.value});
     }
 
     getData(result) {
@@ -91,13 +102,20 @@ export class Home extends Component {
 
         fetch("api/Processing/Calculate", {
             method: "POST",
-            body: null,
+            body: JSON.stringify({ period: this.state.period}),
             headers: {
                 'Content-Type': 'application/json',
             },
         }).then(function (res) {
             res.json().then((result) => {
-                scope.setState({ data: scope.getData(result), excessRate: result.excessRate, eventsCount: result.eventsCount });
+                scope.setState(
+                    {
+                        data: scope.getData(result),
+                        excessRate: result.excessRate,
+                        eventsCount: result.eventsCount,
+                        allEventsCount: result.allEventsCount,
+                        avg: result.avg
+                    });
                 setTimeout(scope.request, scope.interval * 1000);
             }).catch((err) => console.log(err));
         });
@@ -106,8 +124,24 @@ export class Home extends Component {
     render () {
         return (
             <div>
-                <div>Всего запросов: {this.state.eventsCount}</div>
-                <div>Процент превышения 3с: {this.state.excessRate.toFixed(2) + "%"}</div>
+                <div>Всего запросов: {this.state.allEventsCount}</div>
+                <div>Процент превышения 3с за период: {this.state.excessRate.toFixed(2) + "%"}</div>
+                <div>Всего запросов за период: {this.state.eventsCount}</div>
+                <div>Среднее время отклика за период: {this.state.avg + "мс"}</div>
+                <FormControl>
+                    <InputLabel id="demo-simple-select-helper-label">Период мониторинга</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-helper-label"
+                        id="demo-simple-select-helper"
+                        value={this.state.period}
+                        onChange={this.handleChange("period")}
+                    >
+                        <MenuItem value={"minute"}>Последняя минута</MenuItem>
+                        <MenuItem value={"5minute"}>Последние 5 минут</MenuItem>
+                        <MenuItem value={"hour"}>Последний час</MenuItem>
+                        <MenuItem value={"day"}>Сегодняшний день</MenuItem>
+                    </Select>
+                </FormControl>
                 <Chart ref={this.chart} type="line" data={this.state.data} options={this.options} width="100vw" height="80vh" />
             </div>
         );

@@ -11,6 +11,7 @@ namespace FamilServiceMonitoringApp.Schedulle
 	{
 		public Scheduller(IServiceProvider sp)
 		{
+			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<TableClearingJob>()).ToRunNow().AndEvery(3).Hours();
 			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<CalculateJob>()).ToRunNow().AndEvery(1).Seconds();
 		}
 	}
