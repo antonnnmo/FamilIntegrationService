@@ -34,8 +34,8 @@ namespace MonitoringHelperService.Controllers
 
 			var now = DateTime.UtcNow;
 			var jwt = new JwtSecurityToken(
-					issuer: "FamilPAIntegrationService",
-					audience: "PAIntegrationUser",
+					issuer: "MonitoringHelperService",
+					audience: "MonitoringUser",
 					notBefore: now,
 					claims: identity.Claims,
 					expires: now.Add(TimeSpan.FromHours(24)),
@@ -70,7 +70,7 @@ namespace MonitoringHelperService.Controllers
                     do $$ begin
                     if not exists(select 1 from ""User"") then
                         Insert into public.""User""(""Login"", ""Password"")
-	                    VALUES('FamilGateService','5u5eGqJgifJL5mPA4RHGoyRMHKc0YkZBIkkKyjiWOoU=');
+	                    VALUES('Random','wMEf93wsIDJyJWfio+tV+nXPog4vmTXAaLy8rdBaoCA=');
                     END IF;
                     END $$
 

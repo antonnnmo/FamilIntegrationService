@@ -13,7 +13,7 @@ using Npgsql;
 namespace MonitoringService.Controllers
 {
     [ApiController]
-    [Route("select")]
+    [Route("api/select")]
     public class EntityController : ControllerBase
     {
         private readonly ILogger<EntityController> _logger;
@@ -70,11 +70,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 		[HttpPost("product")]
@@ -124,11 +125,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 		[HttpPost("shop")]
@@ -178,11 +180,12 @@ namespace MonitoringService.Controllers
 					}
 				}
 			}
-			return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
-			{
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			}));
+			return Ok(result);
+			//return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+			//{
+			//	NullValueHandling = NullValueHandling.Ignore,
+			//	DefaultValueHandling = DefaultValueHandling.Ignore
+			//}));
 		}
 
 	}

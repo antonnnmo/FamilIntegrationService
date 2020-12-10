@@ -34,8 +34,7 @@ namespace MonitoringService
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
+            services.AddControllers();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -43,8 +42,8 @@ namespace MonitoringService
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidIssuer = "FamilPAIntegrationService",
-                    ValidAudience = "PAIntegrationUser",
+                    ValidIssuer = "MonitoringHelperService",
+                    ValidAudience = "MonitoringUser",
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("nr490jf390353hj9")),
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
@@ -66,12 +65,15 @@ namespace MonitoringService
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            app.UseHttpsRedirection();
         }
     }
 }
