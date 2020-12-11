@@ -12,25 +12,54 @@ namespace FamilServiceMonitoringApp.Processing
 	{
 		public static ResponseResult Calculate()
 		{
-			return Request(@"{
+			var cache = SimpleMemoryCache.Instance;
+			var shops = cache.GetOrCreate("shop");
+			Random rnd = new Random();
+			var shopIndex = rnd.Next(0, shops.Count);
+			var contacts = cache.GetOrCreate("contact");
+			var contactIndex = rnd.Next(0, contacts.Count);
+			var products = cache.GetOrCreate("product");
+			var productIndex = rnd.Next(0, products.Count);
+
+			return Request(string.Format(@"{
 									""client"": {
-										""id"": ""e87da44a-091c-4237-8c54-bbe641c48588""
+										""id"": ""{0}""
 									},
 									""date"": ""2020-12-01"",
-									""shopCode"": ""370"",
+									""shopCode"": ""{1}"",
 									""cashDeskCode"": ""102"",
 									""products"": [
 										{
 											""index"": 1,
 											""price"": 100,
-											""productCode"": ""89138765"",
+											""productCode"": ""{2}"",
 											""quantity"": 1,
 											""amount"": 100
 										}
 									],
 									""paymentForm"": ""FullPayment"",
 									""amount"": 100
-								}");
+								}", contacts[contactIndex].Id, shops[shopIndex].Code, products[productIndex].Code));
+
+			//return Request(string.Format(@"{
+			//						""client"": {
+			//							""id"": ""e87da44a-091c-4237-8c54-bbe641c48588""
+			//						},
+			//						""date"": ""2020-12-01"",
+			//						""shopCode"": ""370"",
+			//						""cashDeskCode"": ""102"",
+			//						""products"": [
+			//							{
+			//								""index"": 1,
+			//								""price"": 100,
+			//								""productCode"": ""89138765"",
+			//								""quantity"": 1,
+			//								""amount"": 100
+			//							}
+			//						],
+			//						""paymentForm"": ""FullPayment"",
+			//						""amount"": 100
+			//					}"));
 		}
 
 		private static ResponseResult Request(string body)
