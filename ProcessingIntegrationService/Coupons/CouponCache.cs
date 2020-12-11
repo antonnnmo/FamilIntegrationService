@@ -1,4 +1,5 @@
-﻿using FamilIntegrationService.Providers;
+﻿using FamilIntegrationService;
+using FamilIntegrationService.Providers;
 using Npgsql;
 using ProcessingIntegrationService.Models;
 using System;
@@ -48,6 +49,7 @@ namespace ProcessingIntegrationService.Coupons
 				foreach (var coupon in _coupons)
 				{
 					var isActive = coupon.IsActive ? 1 : 0;
+
 					using (var cmd = new NpgsqlCommand(@$"Insert into ""public"".""Coupon""(""Id"",
 															""IsActive"",
 															""Name"")
@@ -60,33 +62,41 @@ namespace ProcessingIntegrationService.Coupons
 						cmd.ExecuteNonQuery();
 					}
 
-					foreach (var text in coupon.Texts)
+					if (coupon.Texts != null)
 					{
-						using (var cmd = new NpgsqlCommand(@$"Insert into ""public"".""CouponText""(""Id"",
-															""CouponId"",
-															""Text"",
-															""Order"")
-															VALUES(
-																'{text.Id}',
-																'{coupon.Id}',
-																'{text.Text}',
-																{text.Order}
-															)", conn))
+						foreach (var text in coupon.Texts)
 						{
-							cmd.ExecuteNonQuery();
+							using (var cmd = new NpgsqlCommand(@$"Insert into ""public"".""CouponText""(""Id"",
+																""CouponId"",
+																""Text"",
+																""Order"")
+																VALUES(
+																	'{text.Id}',
+																	'{coupon.Id}',
+																	'{text.Text}',
+																	{text.Order}
+																)", conn))
+							{
+								cmd.ExecuteNonQuery();
+							}
 						}
 					}
 
-					foreach (var promotion in coupon.Promotions)
+
+
+					if (coupon.Promotions != null)
 					{
-						using (var cmd = new NpgsqlCommand(@$"Insert into ""public"".""CouponPromotion""(""Id"",
-															""CouponId"")
-															VALUES(
-																'{promotion.Id}',
-																'{coupon.Id}'
-															)", conn))
+						foreach (var promotion in coupon.Promotions)
 						{
-							cmd.ExecuteNonQuery();
+							using (var cmd = new NpgsqlCommand(@$"Insert into ""public"".""CouponPromotion""(""Id"",
+																""CouponId"")
+																VALUES(
+																	'{promotion.Id}',
+																	'{coupon.Id}'
+																)", conn))
+							{
+								cmd.ExecuteNonQuery();
+							}
 						}
 					}
 				}
