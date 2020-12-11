@@ -36,7 +36,6 @@ namespace FamilServiceMonitoringApp
 			services.AddSingleton(_ => Configuration);
 			services.AddDbContext<ServiceDBContext>();
 			services.AddTransient<CalculateJob>();
-			services.AddTransient<CacheJob>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

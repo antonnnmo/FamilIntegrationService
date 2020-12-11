@@ -16,8 +16,62 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 	{
 		public Dictionary<string, object> GetHandledResponse(Dictionary<string, object> requestData, Dictionary<string, object> responseData, Dictionary<string, object> additionalResponseData)
 		{
+			RemoveCoupon(responseData, requestData);
+			var couponTexts = GetCoupons(responseData);
+
+			responseData.Add("coupons", couponTexts);
+
 			if (responseData.ContainsKey("success") && (bool)responseData["success"] == true)
 			{
+
+				if (responseData.ContainsKey("data") && responseData["data"] != null)
+				{
+					var data = (responseData["data"] as Newtonsoft.Json.Linq.JObject);
+					if (data.ContainsKey("productDiscounts") && data["productDiscounts"] != null)
+					{
+						var removedDiscounts = new List<JToken>();
+						var remainingDiscounts = new List<JToken>();
+						var discounts = (data["productDiscounts"] as Newtonsoft.Json.Linq.JArray).ToList();
+						discounts.ForEach(productDiscount =>
+						{
+							if (productDiscount["discounts"] != null)
+							{
+								var promotionDiscounts = (productDiscount["discounts"] as JArray).Where(d => d["type"].ToString() == "Promotion");
+
+								if (promotionDiscounts.Count() > 0)
+								{
+									var maxDiscount = promotionDiscounts.Aggregate((d1, d2) => (decimal?)d1["discountDiscount"] > (decimal?)d2["discountDiscount"] ? d1 : d2);
+
+									var removingDiscounts = (productDiscount["discounts"] as JArray).Where(d => d["type"].ToString() == "Promotion" && d != maxDiscount);
+									if (removingDiscounts.Count() > 0)
+									{
+										removedDiscounts.AddRange(removingDiscounts);
+									}
+
+									var newDiscounts = (productDiscount["discounts"] as JArray).ToList();
+									newDiscounts.RemoveAll(d => d["type"].ToString() == "Promotion" && d != maxDiscount);
+									remainingDiscounts.AddRange(newDiscounts);
+									(productDiscount["discounts"] as JArray).ReplaceAll(newDiscounts);
+									//productDiscount["Discounts"] = newDiscounts as JToken;
+
+									productDiscount["discount"] = newDiscounts.Sum(d => Convert.ToDecimal(d["discountDiscount"]));
+								}
+							}
+						});
+
+						var activatedPromotions = (data["activatedPromotions"] as Newtonsoft.Json.Linq.JArray).ToList();
+
+						if (removedDiscounts.Count > 0)
+						{
+							var notExistingDiscounts = removedDiscounts.Where(d => remainingDiscounts.Count(d1 => d1["promotion"] != null && d1["promotion"]["name"] == d["promotion"]["name"]) == 0);
+							activatedPromotions.RemoveAll(ap => notExistingDiscounts.Count(d => d["promotion"] != null && d["promotion"]["name"]?.ToString() == ap["name"]?.ToString()) > 0);
+							data.Remove("activatedPromotions");
+							data.Add("activatedPromotions", JToken.FromObject(activatedPromotions));
+						}
+					}
+				}
+				
+
 				var price = 0d;
 				var prices = new Dictionary<string, double>();
 				using (var conn = new NpgsqlConnection(DBProvider.GetConnectionString()))
@@ -87,12 +141,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 				responseData = new Dictionary<string, object>[] { responseData, additionalResponseData }.SelectMany(dict => dict)
 						 .ToDictionary(pair => pair.Key, pair => pair.Value);
 			}
-
-			RemoveCoupon(responseData, requestData);
-			var couponTexts = GetCoupons(responseData);
-
-			responseData.Add("coupons", couponTexts);
-
+			
 			return responseData;
 		}
 
@@ -110,7 +159,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 
 				if (promotionIds.Count() > 0) 
 				{
-					var coupons = CouponCache.Coupons.Where(c => c.Promotions != null && c.Promotions.Any(p => promotionIds.Contains(p.Id))).ToList();
+					var coupons = CouponCache.Coupons.Where(c => c.IsActive && c.Promotions != null && c.Promotions.Any(p => promotionIds.Contains(p.Id))).ToList();
 
 					if (coupons != null && coupons.Count() > 0) 
 					{
