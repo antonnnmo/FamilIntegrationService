@@ -66,7 +66,9 @@ namespace FamilServiceMonitoringApp
 									""count"": ""5""
 								}";
 
-                var req = (HttpWebRequest)WebRequest.Create("http://localhost:55252/api/select/" + path);
+                GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.HelperServiceUrl, out string url);
+                //var req = (HttpWebRequest)WebRequest.Create("http://localhost:55252/api/select/" + path);
+                var req = (HttpWebRequest)WebRequest.Create(url + path);
                 req.Method = "POST";
                 req.ContentType = "application/json";
                 req.Accept = "application/json";

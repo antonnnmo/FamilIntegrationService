@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using FluentScheduler;
 using FamilServiceMonitoringApp.Schedulle;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FamilServiceMonitoringApp
 {
@@ -37,6 +38,10 @@ namespace FamilServiceMonitoringApp
 			services.AddDbContext<ServiceDBContext>();
 			services.AddTransient<CalculateJob>();
 			services.AddTransient<CacheJob>();
+
+			services.AddMemoryCache();
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.CacheInterval, Configuration.GetValue<int>("CacheInterval"));
+			GlobalCacheReader.Cache.Set(GlobalCacheReader.CacheKeys.HelperServiceUrl, Configuration.GetValue<string>("HelperServiceUrl"));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

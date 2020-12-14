@@ -14,7 +14,8 @@ namespace FamilServiceMonitoringApp.Schedulle
 			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<TableClearingJob>()).ToRunNow().AndEvery(3).Hours();
 			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<CalculateJob>()).ToRunNow().AndEvery(1).Seconds();
 
-			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<CacheJob>()).ToRunEvery(10).Minutes();
+			GlobalCacheReader.GetValue(GlobalCacheReader.CacheKeys.CacheInterval, out int minutes);
+			Schedule(() => sp.CreateScope().ServiceProvider.GetRequiredService<CacheJob>()).ToRunEvery(minutes).Minutes();
 
 		}
 	}
