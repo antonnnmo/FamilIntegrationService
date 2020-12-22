@@ -40,7 +40,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 
 								if (promotionDiscounts.Count() > 0)
 								{
-									var maxDiscount = promotionDiscounts.Aggregate((d1, d2) => (decimal?)d1["discountDiscount"] > (decimal?)d2["discountDiscount"] ? d1 : d2);
+									var maxDiscount = promotionDiscounts.Aggregate((d1, d2) => (decimal?)d1["discount"] > (decimal?)d2["discount"] ? d1 : d2);
 
 									var removingDiscounts = (productDiscount["discounts"] as JArray).Where(d => d["type"].ToString() == "Promotion" && d != maxDiscount);
 									if (removingDiscounts.Count() > 0)
@@ -54,7 +54,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 									(productDiscount["discounts"] as JArray).ReplaceAll(newDiscounts);
 									//productDiscount["Discounts"] = newDiscounts as JToken;
 
-									productDiscount["discount"] = newDiscounts.Sum(d => Convert.ToDecimal(d["discountDiscount"]));
+									productDiscount["discount"] = newDiscounts.Sum(d => Convert.ToDecimal(d["discount"]));
 								}
 							}
 						});
