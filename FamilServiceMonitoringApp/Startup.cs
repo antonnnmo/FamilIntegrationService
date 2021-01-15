@@ -37,6 +37,8 @@ namespace FamilServiceMonitoringApp
 			services.AddSingleton(_ => Configuration);
 			services.AddDbContext<ServiceDBContext>();
 			services.AddTransient<CalculateJob>();
+			services.AddTransient<ContactInfoJob>();
+			services.AddTransient<TableClearingJob>();
 			services.AddTransient<CacheJob>();
 
 			services.AddMemoryCache();

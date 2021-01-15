@@ -27,6 +27,16 @@ namespace FamilServiceMonitoringApp.Schedulle
 					{
 						_dbContext.Events.RemoveRange(oldEntities);
 					}
+
+					_dbContext.SaveChanges();
+
+					var oldCIEntities = _dbContext.ContactInfoEvents.Where(e => e.Time < DateTime.UtcNow.AddMonths(-3));
+					if (oldCIEntities != null && oldCIEntities.Count() > 0)
+					{
+						_dbContext.ContactInfoEvents.RemoveRange(oldCIEntities);
+					}
+
+					_dbContext.SaveChanges();
 				}
 			}
 			finally

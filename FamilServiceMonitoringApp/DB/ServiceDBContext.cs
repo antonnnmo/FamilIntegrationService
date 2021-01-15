@@ -12,6 +12,7 @@ namespace FamilServiceMonitoringApp.DB
 		private IConfiguration _configuration;
 
 		public DbSet<Event> Events { get; set; }
+		public DbSet<ContactInfoEvent> ContactInfoEvents { get; set; }
 
         public ServiceDBContext(DbContextOptions<ServiceDBContext> options, IConfiguration configuration) : base(options)
         {

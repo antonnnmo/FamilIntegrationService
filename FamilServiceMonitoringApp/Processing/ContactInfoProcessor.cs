@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace FamilServiceMonitoringApp.Processing
 {
-	public class CalculateProcessor
+	public class ContactInfoProcessor
 	{
-		public static ResponseResult Calculate()
+		public static ResponseResult ContactInfo()
 		{
 			var cache = SimpleMemoryCache.Instance;
 			var shops = cache.GetOrCreate("shop");
@@ -41,37 +41,19 @@ namespace FamilServiceMonitoringApp.Processing
 									""amount"": 100
 								}", contacts[contactIndex].Id, shops[shopIndex].Code, products[productIndex].Code));*/
 
-			return Request(@"{
-									""client"": {
-										""id"": ""e87da44a-091c-4237-8c54-bbe641c48588""
-									},
-									""date"": ""2020-12-01"",
-									""shopCode"": ""370"",
-									""cashDeskCode"": ""102"",
-									""products"": [
-										{
-											""index"": 1,
-											""price"": 100,
-											""productCode"": ""89138765"",
-											""quantity"": 1,
-											""amount"": 100
-										}
-									],
-									""paymentForm"": ""FullPayment"",
-									""amount"": 100
-								}");
+			return Request(@"");
 		}
 
 		private static ResponseResult Request(string body)
 		{
-			var req = (HttpWebRequest)WebRequest.Create("https://loyalty.famil.ru/purchase/calculate");
-			req.Method = "POST";
-			req.ContentType = "application/json";
+			var req = (HttpWebRequest)WebRequest.Create("https://loyalty.famil.ru/contact/info?phone=79046017457");
+			req.Method = "GET";
+			//req.ContentType = "application/json";
 			req.Accept = "application/json";
 			req.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Headers.Add("Authorization", "Bearer vz1TaVi00aYl5nCCr0fJnBQU");
-
+			/*
 			using (var requestStream = req.GetRequestStream())
 			{
 				using (var streamWriter = new StreamWriter(requestStream))
@@ -81,7 +63,7 @@ namespace FamilServiceMonitoringApp.Processing
 					streamWriter.Close();
 				}
 			}
-
+			*/
 			System.Diagnostics.Stopwatch timer = new Stopwatch();
 
 			timer.Start();
