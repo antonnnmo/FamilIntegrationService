@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RedmondLoyaltyMiddleware.MiddlewareHandlers
 {
@@ -19,7 +20,7 @@ namespace RedmondLoyaltyMiddleware.MiddlewareHandlers
 				products.Add(
 					JToken.FromObject(new ProductDto() 
 					{
-						Index = products.Count + 1,
+						Index = products.Max(p=> System.Convert.ToInt32(p["index"].ToString())) + 1,
 						Price = 0,
 						ProductCode = "coupon",
 						Quantity = 1,
