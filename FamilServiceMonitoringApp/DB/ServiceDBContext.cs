@@ -23,7 +23,7 @@ namespace FamilServiceMonitoringApp.DB
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(_configuration.GetConnectionString("Database"));
+                optionsBuilder.UseNpgsql(_configuration.GetConnectionString("Database"));
             }
         }
     }

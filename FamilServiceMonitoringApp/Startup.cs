@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using FluentScheduler;
 using FamilServiceMonitoringApp.Schedulle;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace FamilServiceMonitoringApp
 {
@@ -47,7 +48,7 @@ namespace FamilServiceMonitoringApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ServiceDBContext dbContext)
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ServiceDBContext dbContext, ILoggerFactory loggerFactory)
 		{
 			dbContext.Database.Migrate();
 
@@ -62,6 +63,7 @@ namespace FamilServiceMonitoringApp
 				app.UseHsts();
 			}
 
+			loggerFactory.AddLog4Net();
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 			app.UseSpaStaticFiles();

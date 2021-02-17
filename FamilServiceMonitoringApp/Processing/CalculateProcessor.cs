@@ -64,13 +64,14 @@ namespace FamilServiceMonitoringApp.Processing
 
 		private static ResponseResult Request(string body)
 		{
-			var req = (HttpWebRequest)WebRequest.Create("https://loyalty.famil.ru/purchase/calculate");
+			var req = (HttpWebRequest)WebRequest.Create("http://185.119.56.195:5100/purchase/calculate");
 			req.Method = "POST";
 			req.ContentType = "application/json";
 			req.Accept = "application/json";
 			req.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
 			req.Headers.Add("Authorization", "Bearer vz1TaVi00aYl5nCCr0fJnBQU");
+			req.Timeout = 1000000;
 
 			using (var requestStream = req.GetRequestStream())
 			{
@@ -97,6 +98,7 @@ namespace FamilServiceMonitoringApp.Processing
 			catch (WebException e)
 			{
 				timer.Stop();
+				Logger.LogError(e.Message, e);
 				return new ResponseResult() { Time = timer.ElapsedMilliseconds, IsError = true };
 			}
 		}

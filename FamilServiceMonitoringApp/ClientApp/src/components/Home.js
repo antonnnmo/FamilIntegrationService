@@ -157,49 +157,49 @@ export class Home extends Component {
     render () {
         return (
             <div>
-                <div>Всего запросов, шт: {this.state.allEventsCount}</div>
-                <div>Среднее время отклика, мс: {this.state.avg + "мс"}</div>
-                <div>Общий процент превышения 3с, %: {this.state.excessRate.toFixed(2) + "%"}</div>
+                <div class="left-block">
+                    <FormControl fullWidth >
+                        <InputLabel id="demo-simple-select-helper-label">Период мониторинга</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-helper-label"
+                            id="demo-simple-select-helper"
+                            value={this.state.period}
+                            onChange={this.handleChange("period")}
+                        >
+                            <MenuItem value={"hour"}>Последний час</MenuItem>
+                            <MenuItem value={"day"}>Последние сутки</MenuItem>
+                            <MenuItem value={"custom"}>Произвольный период</MenuItem>
+                        </Select>
+                    </FormControl>
+                    {this.state.period === "custom" && <div>
+                        <TextField
+                            id="datetime-local-custom-start"
+                            label="С"
+                            type="datetime-local"
+                            value={this.state.customStart}
+                            onChange={this.onCustomStartChange}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <TextField
+                            id="datetime-local-custom-end"
+                            label="По"
+                            type="datetime-local"
+                            value={this.state.customEnd}
+                            onChange={this.onCustomEndChange}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                    </div>}
+                </div>
 
-                <FormControl>
-                    <InputLabel id="demo-simple-select-helper-label">Период мониторинга</InputLabel>
-                    <Select
-                        labelId="demo-simple-select-helper-label"
-                        id="demo-simple-select-helper"
-                        value={this.state.period}
-                        onChange={this.handleChange("period")}
-                    >
-                        <MenuItem value={"hour"}>Последний час</MenuItem>
-                        <MenuItem value={"day"}>Последние сутки</MenuItem>
-                        <MenuItem value={"custom"}>Произвольный период</MenuItem>
-                    </Select>
-                </FormControl>
-                {this.state.period === "custom" && <div>
-                    <TextField
-                        id="datetime-local-custom-start"
-                        label="С"
-                        type="datetime-local"
-                        value={this.state.customStart}
-                        onChange={this.onCustomStartChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                    <TextField
-                        id="datetime-local-custom-end"
-                        label="По"
-                        type="datetime-local"
-                        value={this.state.customEnd}
-                        onChange={this.onCustomEndChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                </div>}
-
-                <div>Кол-во запросов за период, шт: {this.state.eventsCount}</div>
-                <div>Среднее время отклика за период, мс: {this.state.avgByPeriod + "мс"}</div>
-                <div>Процент превышения 3с за период, %: {this.state.excessRateByPeriod.toFixed(2) + "%"}</div>
+                <div className="right-block">
+                    <div>Кол-во запросов за период, шт: {this.state.eventsCount}</div>
+                    <div>Среднее время отклика за период, мс: {this.state.avgByPeriod + "мс"}</div>
+                    <div>Процент превышения 3с за период, %: {this.state.excessRateByPeriod.toFixed(2) + "%"}</div>
+                </div>
                 <Chart ref={this.chart} type="bar" data={this.state.data} options={this.options} width="100vw" height="80vh" />
             </div>
         );

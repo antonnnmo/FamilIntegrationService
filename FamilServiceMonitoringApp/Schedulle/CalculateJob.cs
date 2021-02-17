@@ -13,6 +13,7 @@ namespace FamilServiceMonitoringApp.Schedulle
 
 		public CalculateJob(ServiceDBContext dbContext)
 		{
+			Logger.LogError("CalculateJob ctor");
 			_dbContext = dbContext;
 		}
 
@@ -20,6 +21,7 @@ namespace FamilServiceMonitoringApp.Schedulle
 		{
 			try
 			{
+				Logger.LogError("Start to execute Calculate");
 				lock (_lock)
 				{
 					var currentTime = DateTime.UtcNow;
@@ -43,6 +45,7 @@ namespace FamilServiceMonitoringApp.Schedulle
 
 		public void Stop(bool immediate)
 		{
+			Logger.LogError("CalculateJob stop");
 			lock (_lock)
 			{
 				_shuttingDown = true;

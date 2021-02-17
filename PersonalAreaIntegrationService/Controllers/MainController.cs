@@ -87,12 +87,15 @@ namespace PersonalAreaIntegrationService.Controllers
 
 				var req = $@"DO
 						$do$
-						BEGIN
-						IF 0 = (Select COUNT(*) from public.""Product"" Where ""Id"" = '{primaryId}') THEN
-							Insert into public.""Product""(""Id"", ""Code"", ""Name"")
-							VALUES('{primaryId}', '9999999999', (Select ""Name"" from public.""Product"" Where ""Code"" = '{pack.Code}' limit 1));
+							BEGIN
+								IF 0 = (Select COUNT(*) from public.""Product"" Where ""Code"" = '{pack.Code}' limit 1) THEN
+									Insert into public.""Product""(""Id"", ""Code"", ""Name"")
+									VALUES('{primaryId}', '{pack.Code}', '{pack.Code}');
+								ELSIF 0 = (Select COUNT(*) from public.""Product"" Where ""Id"" = '{primaryId}') THEN
+									Insert into public.""Product""(""Id"", ""Code"", ""Name"")
+									VALUES('{primaryId}', '9999999999', (Select ""Name"" from public.""Product"" Where ""Code"" = '{pack.Code}' limit 1));
 								END IF;
-								END
+							END
 						$do$";
 
 				using (var cmd = new NpgsqlCommand())
