@@ -16,13 +16,12 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 	{
 		public Dictionary<string, object> GetHandledResponse(Dictionary<string, object> requestData, Dictionary<string, object> responseData, Dictionary<string, object> additionalResponseData)
 		{
-			RemoveCoupon(responseData, requestData);
-			var couponTexts = GetCoupons(responseData);
-
-			responseData.Add("coupons", couponTexts);
-
 			if (responseData.ContainsKey("success") && (bool)responseData["success"] == true)
 			{
+				RemoveCoupon(responseData, requestData);
+				var couponTexts = GetCoupons(responseData);
+
+				responseData.Add("coupons", couponTexts);
 
 				if (responseData.ContainsKey("data") && responseData["data"] != null)
 				{
@@ -175,7 +174,7 @@ namespace LoyaltyMiddleware.MiddlewareHandlers
 
 		private void RemoveCoupon(Dictionary<string, object> responseData, Dictionary<string, object> requestData)
 		{
-
+			if (!responseData.ContainsKey("data")) return;
 			var couponProduct = (requestData["products"] as JArray).FirstOrDefault(p => (p as JObject)["productCode"] != null && (p as JObject)["productCode"].ToString() == "coupon") as JObject;
 			if (couponProduct != null) 
 			{
